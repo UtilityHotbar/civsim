@@ -9,8 +9,11 @@ import time
 import math
 import termcolor
 import copy
+import platform
 
 SAVE_LOCATION = 'logfile.txt'
+
+OS = platform.system()
 
 pp = pprint.PrettyPrinter()
 tnoise = [PerlinNoise(octaves=2, seed=random.randint(1,10000)), PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=88, seed=random.randint(1,10000))]
