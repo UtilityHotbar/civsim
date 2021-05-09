@@ -19,3 +19,5 @@ Currently civsim supports the following features:
 * Possibly some sort of ruler system to see national priorities change over time
 * Playing as a civ?
 * Expanding over water
+
+![Demo image](https://github.com/UtilityHotbar/civsim/civsim.png)
