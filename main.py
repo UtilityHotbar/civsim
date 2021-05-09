@@ -248,7 +248,10 @@ def colour(char):
 
 
 def display(world, year=None):
-    os.system('cls')
+    if OS == 'Windows':
+        os.system('cls')
+    else:
+        os.system('clear')
     print(f'Year {year}')
     for y in range(HEIGHT):
         for x in range(WIDTH):
