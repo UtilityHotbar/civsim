@@ -18,6 +18,6 @@ Currently civsim supports the following features:
 * Diplomacy between nations
 * Possibly some sort of ruler system to see national priorities change over time
 * Playing as a civ?
-* Expanding over water
+* Expanding over water (Independent agents?)
 
 ![Demo image](https://github.com/UtilityHotbar/civsim/blob/master/civsim.png)

@@ -1,4 +1,4 @@
-# RPG TOOLS v1.0
+# RPG TOOLS v1.0 by UtilityHotbar
 
 import re
 import random

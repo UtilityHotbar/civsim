@@ -1,3 +1,5 @@
+# Civsim v1.0 by Utilityhotbar
+
 import pprint
 from perlin_noise import PerlinNoise
 import random
@@ -8,7 +10,7 @@ import math
 import termcolor
 import copy
 
-open('logfile.txt', 'w').write('')
+SAVE_LOCATION = 'logfile.txt'
 
 pp = pprint.PrettyPrinter()
 tnoise = [PerlinNoise(octaves=2, seed=random.randint(1,10000)), PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=88, seed=random.randint(1,10000))]
@@ -27,8 +29,9 @@ def clamp(val, min=0, max=1):
     else:
         return val
 
+
 def log(*args,end='\n'):
-    with open('logfile.txt', 'a') as w:
+    with open(SAVE_LOCATION, 'a') as w:
         w.write(' '.join([str(arg) for arg in args])+end)
 
 
@@ -98,7 +101,10 @@ class Civilisation:
             if rpgtools.roll('1d6') == 1:
                 self.dissolve()
             else:
-                self.collapse()
+                if rpgtools.roll('1d6') < 4:
+                    self.collapse()
+                else:
+                    self.collapse(decimate=True)
 
     def dissolve(self):
         global CIVLETTERS
@@ -113,22 +119,24 @@ class Civilisation:
                 newseed = random.choice(self.territory)
                 make_civ(newseed[0], newseed[1])
 
-    def collapse(self):
+    def collapse(self, decimate=False):
         global CIVLETTERS
         log(f'{self.name} is collapsing.')
-        try:
-            self.power /= random.randint(2,4)
-            for x in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
-                rmtarget = random.choice(self.territory)
-                self.territory.remove(rmtarget)
-                CIV[rmtarget[1]][rmtarget[0]] = ''
+        self.instability += rpgtools.roll(f'{math.ceil(self.powerbase/10)}d6')
+        self.power /= random.randint(2, 4)
+        seeding_targets = []
+        for x in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
+            rmtarget = random.choice(self.territory)
+            seeding_targets.append(rmtarget)
+            self.territory.remove(rmtarget)
+            CIV[rmtarget[1]][rmtarget[0]] = ''
+        if not decimate and seeding_targets:  # Natural disasters do not create new states
             for _ in range(random.randint(1, math.ceil(self.powerbase / 10) + 1)):
-                newseed = random.choice(self.territory)
-                self.territory.remove(newseed)
+                newseed = random.choice(seeding_targets)
+                seeding_targets.remove(newseed)
                 make_civ(newseed[0], newseed[1], parent=self, expand=True)
-        except IndexError:
-            self.dead = True
-            return
+                if not seeding_targets:
+                    return
 
     def execute(self):
         bank = 0
