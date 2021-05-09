@@ -1,4 +1,4 @@
-# Civsim v0.1 by Utilityhotbar
+# Civsim v0.1 by UtilityHotbar
 
 import pprint
 from perlin_noise import PerlinNoise
