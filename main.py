@@ -8,7 +8,7 @@ import math
 import termcolor
 import copy
 
-open('logfilt.text', 'w').write('')
+open('logfile.txt', 'w').write('')
 
 pp = pprint.PrettyPrinter()
 tnoise = [PerlinNoise(octaves=2, seed=random.randint(1,10000)), PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=88, seed=random.randint(1,10000))]
