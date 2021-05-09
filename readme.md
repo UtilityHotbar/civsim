@@ -20,4 +20,4 @@ Currently civsim supports the following features:
 * Playing as a civ?
 * Expanding over water
 
-![Demo image](https://github.com/UtilityHotbar/civsim/civsim.png)
+![Demo image](https://github.com/UtilityHotbar/civsim/blob/master/civsim.png)
