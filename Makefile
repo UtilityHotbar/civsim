@@ -52,7 +52,7 @@ clean-win:
 
 setup-dev-ubuntu: clean-linux
 	@echo ----------SETUP-DEV-UBUNTU----------
-	sudo apt install build-essential python3-dev python3-pip python3-venv python3-numpy libsdl2-dev libffi-dev libomp5
+	sudo apt install build-essential python3-dev python3-pip python3-venv
 	${LINUX_PYTHON} -m venv env
 	${LINUX_VENV} -m pip install --upgrade pip
 	${LINUX_VENV} -m pip install -r requirements.txt
