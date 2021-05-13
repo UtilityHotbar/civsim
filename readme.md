@@ -13,11 +13,11 @@ Currently civsim supports the following features:
 * Civilisation generation with different priorities and favoured terrain etc
 * Civilisation growth, expansion, stabilisation, destabilisation, collapse, and death
 * Successor states and breakaway states
+* Playing as a civilisation (select Realm mode from the start menu)
 
 ## Todo
 * Diplomacy between nations
 * Possibly some sort of ruler system to see national priorities change over time
-* Playing as a civ?
 * Expanding over water (Independent agents?)
 
 ![Demo image](https://github.com/UtilityHotbar/civsim/blob/master/civsim.png)
