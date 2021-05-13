@@ -1,0 +1,30 @@
+# Biome states
+
+UNOCUPPIED = ''
+
+# Civ
+
+CIVLETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_=+[{]}\|;:,<.>/?'
+
+TECH_DEVELOPMENT = 'Development'
+TERRITORIAL_EXPANSION = 'Expansion'
+POPULATION_GROWTH = 'Growth'
+STABILIZATION = 'Stabilise'
+
+CIV_PRIORITIES = [TECH_DEVELOPMENT, TERRITORIAL_EXPANSION, POPULATION_GROWTH, STABILIZATION]
+
+AGE = 500  # In years
+
+# Biomes
+
+BEACH = 'b'
+DESERT = 'd'
+FOREST = 'f'
+GRASSLAND = 'g'
+JUNGLE = 'j'
+MOUNTAIN = 'm'
+OCEAN = '~'
+SNOW = 's'
+TUNDRA = 't'
+
+SEA_LEVEL = 0.001
