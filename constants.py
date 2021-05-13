@@ -1,3 +1,7 @@
+# Options
+
+SAVE_LOCATION = 'logfile.txt'
+
 # Biome states
 
 UNOCUPPIED = ''
@@ -14,6 +18,8 @@ STABILIZATION = 'Stabilise'
 CIV_PRIORITIES = [TECH_DEVELOPMENT, TERRITORIAL_EXPANSION, POPULATION_GROWTH, STABILIZATION]
 
 AGE = 500  # In years
+HEIGHT = 20
+WIDTH = 50
 
 # Biomes
 

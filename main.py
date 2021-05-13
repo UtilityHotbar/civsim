@@ -1,18 +1,18 @@
 # Civsim v0.2 by UtilityHotbar
 
-from constants import *
-import pprint
 from perlin_noise import PerlinNoise
+
+import math
+import os
+import platform
+import pprint
 import random
 import rpgtools
-import os
 import time
-import math
 import termcolor
-import copy
-import platform
 
-SAVE_LOCATION = 'logfile.txt'
+from constants import *
+from utils import *
 
 OS = platform.system()
 
@@ -20,25 +20,10 @@ pp = pprint.PrettyPrinter()
 tnoise = [PerlinNoise(octaves=2, seed=random.randint(1,10000)), PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=88, seed=random.randint(1,10000))]
 enoise = [PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=10, seed=random.randint(1,10000)), PerlinNoise(octaves=20, seed=random.randint(1,10000))]
 
-
-def messy_noise(val, noise_set):
-    return noise_set[0](val)+0.5*noise_set[1](val)+0.25*noise_set[2](val)
-
-
-def clamp(val, nmin=0, nmax=1):
-    return max(nmin, min(val, nmax))
-
-def log(*args,end='\n'):
-    with open(SAVE_LOCATION, 'a') as w:
-        w.write(' '.join([str(arg) for arg in args])+end)
-
-
-HEIGHT = 20
-WIDTH = 50
 TEMP = [[messy_noise([i / WIDTH, j / HEIGHT], tnoise)+0.1 for i in range(WIDTH)] for j in range(HEIGHT)]
 ELEV = [[messy_noise([i / WIDTH, j / HEIGHT], enoise) for i in range(WIDTH)] for j in range(HEIGHT)]
-WORLD = [[OCEAN for i in range(WIDTH)] for j in range(HEIGHT)]
-CIV = [[UNOCUPPIED for i in range(WIDTH)] for j in range(HEIGHT)]
+WORLD = [[OCEAN for _ in range(WIDTH)] for _ in range(HEIGHT)]
+CIV = [[UNOCUPPIED for _ in range(WIDTH)] for _ in range(HEIGHT)]
 CURR_CIV = 0
 CIVLIST = []
 CIV_MISSIVES = []
@@ -76,7 +61,7 @@ class Civilisation:
     def expand(self):
         if self.dead or self.territory == []:
             return
-        for n in range(random.randint(2, 5)):
+        for _ in range(random.randint(2, 5)):
             attempt = random.choice(self.territory)
             rng = 1
             ax = random.randint(clamp(attempt[0]-rng, nmax=WIDTH-1), clamp(attempt[0]+rng, nmax=WIDTH-1))
@@ -133,7 +118,7 @@ class Civilisation:
         self.instability += rpgtools.roll(f'{math.ceil(self.powerbase/10)}d6')
         self.power /= random.randint(2, 4)
         seeding_targets = []
-        for x in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
+        for _ in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
             rmtarget = random.choice(self.territory)
             seeding_targets.append(rmtarget)
             self.territory.remove(rmtarget)
@@ -214,7 +199,7 @@ def generate(world, tmap, emap):
 def seed(world, num_attempts=10, player_control=False):
     global CURR_CIV
     pc = player_control
-    for i in range(num_attempts):
+    for _ in range(num_attempts):
         tx = random.randint(0, WIDTH-1)
         ty = random.randint(0, HEIGHT-1)
         target = world[ty][tx]
@@ -236,41 +221,10 @@ def make_civ(x, y, parent=None, expand=False, player_control=False):
     if expand:
         nc.expand()
 
-
-def scan(world, target, delete=False):
-    reslist = []
-    for y in range(HEIGHT):
-        for x in range(WIDTH):
-            if world[y][x] == target:
-                if not delete:
-                    reslist.append([x, y])
-                else:
-                    world[y][x] = ''
-    return reslist
-
-
 def findciv(target):
     for civ in CIVLIST:
         if civ.symbol == target:
             return civ
-
-
-def colour(char):
-    if char == 'g' or char == 'f':
-        return 'green'
-    elif char == '~':
-        return 'blue'
-    elif char == 'm':
-        return 'magenta'
-    elif char == 'j':
-        return 'cyan'
-    elif char == 's':
-        return 'white'
-    elif char == 'd' or char == 'b':
-        return 'yellow'
-    else:
-        return 'white'
-
 
 def display(world, year=None):
     if OS == 'Windows':
@@ -286,7 +240,6 @@ def display(world, year=None):
                 # print(' ', end='')
                 print(termcolor.colored(world[y][x], colour(world[y][x])), end='')
         print('')
-
 
 def update():
     for cand in CIVLIST:
