@@ -33,7 +33,7 @@ class Civilisation:
         self.name = name
         self.symbol = symbol
         self.territory = [origin]
-        self.home_biome = WORLD[origin[1]][origin[0]]
+        self.home_biome = WORLD[origin[0]][origin[1]]
         self.controlled_by_player = control
         # National stats
         self.instability = -10  # Low starting instability to ensure early expansion/survival
@@ -58,17 +58,17 @@ class Civilisation:
                 self.priorities.append(item)
 
     def expand(self):
-        if self.dead or self.territory == []:
+        if self.dead or not self.territory:
             return
 
         for _ in range(random.randint(2, 5)):
             attempt = random.choice(self.territory)
             rng = 1
-            ax = random.randint(clamp(attempt[0]-rng, nmax=WIDTH-1), clamp(attempt[0]+rng, nmax=WIDTH-1))
-            ay = random.randint(clamp(attempt[1]-rng, nmax=HEIGHT-1), clamp(attempt[1]+rng, nmax=HEIGHT-1))
+            ax = random.randint(clamp(attempt[1]-rng, nmax=WIDTH-1), clamp(attempt[1]+rng, nmax=WIDTH-1))
+            ay = random.randint(clamp(attempt[0]-rng, nmax=HEIGHT-1), clamp(attempt[0]+rng, nmax=HEIGHT-1))
             attempt_loc = WORLD[ay][ax]
             
-            if not (attempt_loc == OCEAN or attempt_loc == self.symbol):  # Cannot expand into water
+            if not (attempt_loc == OCEAN or [ay, ax] in self.territory):  # Cannot expand into water
                 c = 10 + max(50, 5*self.techlevel)  # Base 10% success chance, max +50% from technology
                 if attempt_loc == self.home_biome:  # Bonus chance for expansion if attempting to expand into base biome
                     c += 20
@@ -82,17 +82,16 @@ class Civilisation:
                 
                 if roll < c:
                     CIV[ay][ax] = self.symbol
-                    self.territory.append([ax, ay])
+                    self.territory.append([ay, ax])
 
     def update(self):
         self.age += 1
-        self.territory = scan(CIV, self.symbol)
         if not self.territory:
             self.dissolve()
         self.powerbase = len(self.territory)  # For each unit of land you hold you gain extra power
         self.power += self.powerbase*(0.8+(rpgtools.roll('6d10-6d10')/100))+self.powerbase*self.techlevel*3  # National fortune = Fortune (normal distribution) + tech
         self.instability += random.randint(1, math.ceil(self.powerbase/10)+1) - rpgtools.roll('3d6-3d6')
-        if rpgtools.roll('2d100')<self.instability:
+        if rpgtools.roll('2d100') < self.instability:
             if rpgtools.roll('1d6') == 1:
                 self.dissolve()
             else:
@@ -124,7 +123,7 @@ class Civilisation:
             rmtarget = random.choice(self.territory)
             seeding_targets.append(rmtarget)
             self.territory.remove(rmtarget)
-            CIV[rmtarget[1]][rmtarget[0]] = UNOCUPPIED
+            CIV[rmtarget[0]][rmtarget[1]] = UNOCUPPIED
         if not decimate and seeding_targets:  # Natural disasters do not create new states
             for _ in range(random.randint(1, math.ceil(self.powerbase / 10) + 1)):
                 newseed = random.choice(seeding_targets)
@@ -205,17 +204,17 @@ def seed(world, num_attempts=10, player_control=False):
         ty = random.randint(0, HEIGHT-1)
         target = world[ty][tx]
         if target != OCEAN:
-            make_civ(tx, ty, player_control=pc)
+            make_civ(ty, tx, player_control=pc)
             # Player can only control 1 civ at a time
             if pc:
                 pc = False
 
-def make_civ(x, y, parent=None, expand=False, player_control=False):
+def make_civ(y, x, parent=None, expand=False, player_control=False):
     global CURR_CIV
     if CURR_CIV > len(CIVLETTERS)-1:
         return
     CIV[y][x] = CIVLETTERS[CURR_CIV]
-    nc = Civilisation('Civ {}+{}'.format(CIVLETTERS[CURR_CIV], CURR_CIV), CIVLETTERS[CURR_CIV], [x, y], ancestor=parent, control=player_control)
+    nc = Civilisation('Civ {}+{}'.format(CIVLETTERS[CURR_CIV], CURR_CIV), CIVLETTERS[CURR_CIV], [y, x], ancestor=parent, control=player_control)
     CIVLIST.append(nc)
     CURR_CIV += 1
     if expand:

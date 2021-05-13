@@ -6,7 +6,7 @@ def scan(world, target, delete=False):
         for x in range(WIDTH):
             if world[y][x] == target:
                 if not delete:
-                    reslist.append([x, y])
+                    reslist.append([y, x])
                 else:
                     world[y][x] = UNOCUPPIED
     return reslist
