@@ -26,7 +26,7 @@ def roll(dice_string) -> int:
     return eval(dice_string)
 
 
-def generate_menu(options, prompt=None):
+def generate_menu(options, prompt=None, response_mode='index'):
     if not prompt:
         print('Your options are:')
     else:
@@ -45,4 +45,7 @@ def generate_menu(options, prompt=None):
             break
         except ValueError:
             print(f'Error - Please enter a number from 1 to {i}')
-    return options[response-1]
+    if response_mode == 'index':
+        return response-1
+    else:
+        return options[response-1]
