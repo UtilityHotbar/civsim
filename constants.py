@@ -21,7 +21,7 @@ MENU_LOGO = '''
 
 # Biome states
 
-UNOCUPPIED = ''
+UNOCCUPIED = ''
 
 # Civ
 

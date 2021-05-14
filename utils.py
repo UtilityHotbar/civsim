@@ -1,4 +1,4 @@
-from constants import BEACH, DESERT, FOREST, GRASSLAND, HEIGHT, JUNGLE, MOUNTAIN, OCEAN, SAVE_LOCATION, SNOW, WIDTH, UNOCUPPIED
+from constants import BEACH, DESERT, FOREST, GRASSLAND, HEIGHT, JUNGLE, MOUNTAIN, OCEAN, SAVE_LOCATION, SNOW, WIDTH, UNOCCUPIED
 
 def scan(world, target, delete=False):
     reslist = []
@@ -8,7 +8,7 @@ def scan(world, target, delete=False):
                 if not delete:
                     reslist.append([y, x])
                 else:
-                    world[y][x] = UNOCUPPIED
+                    world[y][x] = UNOCCUPIED
     return reslist
 
 def messy_noise(val, noise_set):

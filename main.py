@@ -21,7 +21,7 @@ enoise = [PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octa
 TEMP = [[messy_noise([i / WIDTH, j / HEIGHT], tnoise)+0.1 for i in range(WIDTH)] for j in range(HEIGHT)]
 ELEV = [[messy_noise([i / WIDTH, j / HEIGHT], enoise) for i in range(WIDTH)] for j in range(HEIGHT)]
 WORLD = [[OCEAN]*WIDTH for _ in range(HEIGHT)]
-CIV = [[UNOCUPPIED]*WIDTH for _ in range(HEIGHT)]
+CIV = [[UNOCCUPIED]*WIDTH for _ in range(HEIGHT)]
 CURR_CIV = 0
 CIVLIST = []
 CIV_MISSIVES = []
@@ -72,7 +72,7 @@ class Civilisation:
                 c = 10 + max(50, 5*self.techlevel)  # Base 10% success chance, max +50% from technology
                 if attempt_loc == self.home_biome:  # Bonus chance for expansion if attempting to expand into base biome
                     c += 20
-                if CIV[ay][ax] != UNOCUPPIED:  # Spreading into occupied squares is harder
+                if CIV[ay][ax] != UNOCCUPIED:  # Spreading into occupied squares is harder
                     c -= 5 + findciv(CIV[ay][ax]).techlevel
                 if WORLD[ay][ax] == MOUNTAIN:  # Mountains make it hard to spread
                     c -= 5
@@ -123,7 +123,7 @@ class Civilisation:
             rmtarget = random.choice(self.territory)
             seeding_targets.append(rmtarget)
             self.territory.remove(rmtarget)
-            CIV[rmtarget[0]][rmtarget[1]] = UNOCUPPIED
+            CIV[rmtarget[0]][rmtarget[1]] = UNOCCUPIED
         if not decimate and seeding_targets:  # Natural disasters do not create new states
             for _ in range(random.randint(1, math.ceil(self.powerbase / 10) + 1)):
                 newseed = random.choice(seeding_targets)
