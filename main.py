@@ -20,8 +20,8 @@ enoise = [PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octa
 
 TEMP = [[messy_noise([i / WIDTH, j / HEIGHT], tnoise)+0.1 for i in range(WIDTH)] for j in range(HEIGHT)]
 ELEV = [[messy_noise([i / WIDTH, j / HEIGHT], enoise) for i in range(WIDTH)] for j in range(HEIGHT)]
-WORLD = [[OCEAN for _ in range(WIDTH)] for _ in range(HEIGHT)]
-CIV = [[UNOCUPPIED for _ in range(WIDTH)] for _ in range(HEIGHT)]
+WORLD = [[OCEAN]*WIDTH for _ in range(HEIGHT)]
+CIV = [[UNOCUPPIED]*WIDTH for _ in range(HEIGHT)]
 CURR_CIV = 0
 CIVLIST = []
 CIV_MISSIVES = []
