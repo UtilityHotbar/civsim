@@ -6,7 +6,7 @@ import math
 import os
 import platform
 import random
-import rpgtools
+import rpgtools.main as rpgtools
 import time
 import termcolor
 
