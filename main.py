@@ -1,55 +1,30 @@
 # Civsim v0.2 by UtilityHotbar
 
-import pprint
 from perlin_noise import PerlinNoise
+
+import math
+import os
+import platform
 import random
 import rpgtools
-import os
 import time
-import math
 import termcolor
-import copy
-import platform
 
-SAVE_LOCATION = 'logfile.txt'
+from constants import *
+from utils import *
 
 OS = platform.system()
 
-pp = pprint.PrettyPrinter()
 tnoise = [PerlinNoise(octaves=2, seed=random.randint(1,10000)), PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=88, seed=random.randint(1,10000))]
 enoise = [PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=10, seed=random.randint(1,10000)), PerlinNoise(octaves=20, seed=random.randint(1,10000))]
 
-
-def messy_noise(val, noise_set):
-    return noise_set[0](val)+0.5*noise_set[1](val)+0.25*noise_set[2](val)
-
-
-def clamp(val, min=0, max=1):
-    if val < min:
-        return min
-    elif val > max:
-        return max
-    else:
-        return val
-
-
-def log(*args,end='\n'):
-    with open(SAVE_LOCATION, 'a') as w:
-        w.write(' '.join([str(arg) for arg in args])+end)
-
-
-HEIGHT = 20
-WIDTH = 50
-AGE = 500  # In years
 TEMP = [[messy_noise([i / WIDTH, j / HEIGHT], tnoise)+0.1 for i in range(WIDTH)] for j in range(HEIGHT)]
 ELEV = [[messy_noise([i / WIDTH, j / HEIGHT], enoise) for i in range(WIDTH)] for j in range(HEIGHT)]
-WORLD = [['?' for i in range(WIDTH)] for j in range(HEIGHT)]
-CIV = [['' for i in range(WIDTH)] for j in range(HEIGHT)]
-CIVLETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_=+[{]}\|;:,<.>/?'
+WORLD = [[OCEAN]*WIDTH for _ in range(HEIGHT)]
+CIV = [[UNOCCUPIED]*WIDTH for _ in range(HEIGHT)]
 CURR_CIV = 0
 CIVLIST = []
 CIV_MISSIVES = []
-CIV_OPTIONS = ['Expansion', 'Development', 'Growth', 'Stabilise']
 YEAR = 0
 
 
@@ -58,7 +33,7 @@ class Civilisation:
         self.name = name
         self.symbol = symbol
         self.territory = [origin]
-        self.home_biome = WORLD[origin[1]][origin[0]]
+        self.home_biome = WORLD[origin[0]][origin[1]]
         self.controlled_by_player = control
         # National stats
         self.instability = -10  # Low starting instability to ensure early expansion/survival
@@ -69,51 +44,54 @@ class Civilisation:
         # Internal priorities
         self.priorities = []
         # Diplomatic profile
-        self.profile = {'friendliness': rpgtools.roll('1d100'),
-                        'trustworthiness': rpgtools.roll('1d100'),
-                        'fearfulness': rpgtools.roll('1d100'),
-                        'reputation': 0
-                        }
+        self.profile = {
+            'friendliness': rpgtools.roll('1d100'),
+            'trustworthiness': rpgtools.roll('1d100'),
+            'fearfulness': rpgtools.roll('1d100'),
+            'reputation': 0
+        }
         # Diplomatic relationships
         self.relationships = {}
         self.age = 0
-        for item in CIV_OPTIONS:  # Civilisation priorities determined randomly
+        for item in CIV_PRIORITIES:  # Civilisation priorities determined randomly
             for _ in range(random.randint(1, 8)):
                 self.priorities.append(item)
 
     def expand(self):
-        if self.dead or self.territory == []:
+        if self.dead or not self.territory:
             return
-        for n in range(random.randint(2, 5)):
+
+        for _ in range(random.randint(2, 5)):
             attempt = random.choice(self.territory)
             rng = 1
-            ax = random.randint(clamp(attempt[0]-rng, max=WIDTH-1), clamp(attempt[0]+rng, max=WIDTH-1))
-            ay = random.randint(clamp(attempt[1]-rng, max=HEIGHT-1), clamp(attempt[1]+rng, max=HEIGHT-1))
+            ax = random.randint(clamp(attempt[1]-rng, nmax=WIDTH-1), clamp(attempt[1]+rng, nmax=WIDTH-1))
+            ay = random.randint(clamp(attempt[0]-rng, nmax=HEIGHT-1), clamp(attempt[0]+rng, nmax=HEIGHT-1))
             attempt_loc = WORLD[ay][ax]
-            if not (attempt_loc == '~' or attempt_loc == self.symbol):  # Cannot expand into water
+            
+            if not (attempt_loc == OCEAN or [ay, ax] in self.territory):  # Cannot expand into water
                 c = 10 + max(50, 5*self.techlevel)  # Base 10% success chance, max +50% from technology
                 if attempt_loc == self.home_biome:  # Bonus chance for expansion if attempting to expand into base biome
                     c += 20
-                if CIV[ay][ax] != '':  # Spreading into occupied squares is harder
+                if CIV[ay][ax] != UNOCCUPIED:  # Spreading into occupied squares is harder
                     c -= 5 + findciv(CIV[ay][ax]).techlevel
-                if WORLD[ay][ax] == 'm':  # Mountains make it hard to spread
+                if WORLD[ay][ax] == MOUNTAIN:  # Mountains make it hard to spread
                     c -= 5
-                elif WORLD[ay][ax] == 'g':  # grasslands easy to spread
+                elif WORLD[ay][ax] == GRASSLAND:  # grasslands easy to spread
                     c += 5
                 roll = rpgtools.roll('1d100')
+                
                 if roll < c:
                     CIV[ay][ax] = self.symbol
-                    self.territory.append([ax, ay])
+                    self.territory.append([ay, ax])
 
     def update(self):
         self.age += 1
-        self.territory = scan(CIV, self.symbol)
-        if self.territory == []:
+        if not self.territory:
             self.dissolve()
         self.powerbase = len(self.territory)  # For each unit of land you hold you gain extra power
         self.power += self.powerbase*(0.8+(rpgtools.roll('6d10-6d10')/100))+self.powerbase*self.techlevel*3  # National fortune = Fortune (normal distribution) + tech
         self.instability += random.randint(1, math.ceil(self.powerbase/10)+1) - rpgtools.roll('3d6-3d6')
-        if rpgtools.roll('2d100')<self.instability:
+        if rpgtools.roll('2d100') < self.instability:
             if rpgtools.roll('1d6') == 1:
                 self.dissolve()
             else:
@@ -141,11 +119,11 @@ class Civilisation:
         self.instability += rpgtools.roll(f'{math.ceil(self.powerbase/10)}d6')
         self.power /= random.randint(2, 4)
         seeding_targets = []
-        for x in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
+        for _ in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
             rmtarget = random.choice(self.territory)
             seeding_targets.append(rmtarget)
             self.territory.remove(rmtarget)
-            CIV[rmtarget[1]][rmtarget[0]] = ''
+            CIV[rmtarget[0]][rmtarget[1]] = UNOCCUPIED
         if not decimate and seeding_targets:  # Natural disasters do not create new states
             for _ in range(random.randint(1, math.ceil(self.powerbase / 10) + 1)):
                 newseed = random.choice(seeding_targets)
@@ -158,37 +136,37 @@ class Civilisation:
         bank = 0
         baseactions = math.ceil(self.powerbase/10+1)
         maxactions = math.ceil(self.powerbase/5+1)
-        curr_actions = random.randint(baseactions,maxactions)
+        curr_actions = random.randint(baseactions, maxactions)
         if self.controlled_by_player:
             print(f'YOU ARE CIV {self.name}.\n'
                   f'Power: {self.power} (Grow or expand to increase your power)\n'
                   f'Territory: {self.powerbase} (Expanding requires 10 power)\n'
                   f'Tech level: {self.techlevel} (Development requires 20 power)\n'
                   f'Instability: {self.instability} (Reducing instability is free)\n')
-        for _ in range(curr_actions):
+        for n in range(curr_actions):
             if self.controlled_by_player:
-                print(f'YOU HAVE {curr_actions-_} ACTIONS REMAINING.')
-                curr_option = CIV_OPTIONS[rpgtools.generate_menu(CIV_OPTIONS)]
+                print(f'YOU HAVE {curr_actions-n} ACTIONS REMAINING.')
+                curr_option = CIV_PRIORITIES[rpgtools.generate_menu(CIV_PRIORITIES)]
             else:
                 curr_option = random.choice(self.priorities)
-            if curr_option == 'Expansion':
+            if curr_option == TERRITORIAL_EXPANSION:
                 log(f'{self.name} is expanding')
                 if self.power > 10:
                     self.power -= 10
                     self.expand()
                 else:
                     log(f'{self.name} failed to expand')
-            elif curr_option == 'Development':
+            elif curr_option == TECH_DEVELOPMENT:
                 log(f'{self.name} is developing')
                 if self.power > 20:
                     self.power -= 20
                     self.techlevel += rpgtools.roll('1d10')/10
                 else:
                     log(f'{self.name} failed to develop')
-            elif curr_option == 'Growth':
+            elif curr_option == POPULATION_GROWTH:
                 log(f'{self.name} is growing')
                 bank += self.power * (rpgtools.roll('1d4')/10)
-            elif curr_option == 'Stabilise':
+            elif curr_option == TERRITORIAL_STABILIZATION:
                 log(f'{self.name} is stabilising')
                 self.instability *= random.random()
         self.power += bank
@@ -199,106 +177,71 @@ def generate(world, tmap, emap):
         for x in range(WIDTH):
             local_t = tmap[y][x]
             local_e = emap[y][x]
-            if local_e < 0.001:  # If too low, ocean by default
-                world[y][x] = '~'  # Ocean
-            elif local_e < 0.100:  # Next to oceans are beaches
-                world[y][x] = 'b'  # Beach
-            elif local_e > 0.4:  # If too tall, mountain by default
-                world[y][x] = 'm'
-            else:  # if in temperate region, determine biome based on climate
-                if local_t < -0.2:  # snow
-                    world[y][x] = 's'
-                elif local_t < 0:  # tundra
-                    world[y][x] = 't'
-                elif local_t < 0.1:  # grassland
-                    world[y][x] = 'g'
-                elif local_t < 0.2:  # forest
-                    world[y][x] = 'f'
+            if local_e >= SEA_LEVEL and local_e < 0.100:  # next to oceans are beaches
+                world[y][x] = BEACH
+            elif local_e > 0.4:  # if too tall, mountain by default
+                world[y][x] = MOUNTAIN
+            elif local_e > SEA_LEVEL:  # if in a temperate region, determine biome based on climate
+                if local_t < -0.2:
+                    world[y][x] = SNOW
+                elif local_t < 0:
+                    world[y][x] = TUNDRA
+                elif local_t < 0.1:
+                    world[y][x] = GRASSLAND
+                elif local_t < 0.2:
+                    world[y][x] = FOREST
                 elif local_t < 0.3:
-                    world[y][x] = 'j'  # jungle
+                    world[y][x] = JUNGLE
                 else:
-                    world[y][x] = 'd'  # desert
+                    world[y][x] = DESERT
     return world
-
 
 def seed(world, num_attempts=10, player_control=False):
     global CURR_CIV
     pc = player_control
-    for i in range(num_attempts):
+    for _ in range(num_attempts):
         tx = random.randint(0, WIDTH-1)
         ty = random.randint(0, HEIGHT-1)
         target = world[ty][tx]
-        if target != '~':
-            make_civ(tx, ty, player_control=pc)
+        if target != OCEAN:
+            make_civ(ty, tx, player_control=pc)
             # Player can only control 1 civ at a time
             if pc:
                 pc = False
 
-
-def make_civ(x, y, parent=None, expand=False, player_control=False):
+def make_civ(y, x, parent=None, expand=False, player_control=False):
     global CURR_CIV
     if CURR_CIV > len(CIVLETTERS)-1:
         return
     CIV[y][x] = CIVLETTERS[CURR_CIV]
-    nc = Civilisation('Civ {}+{}'.format(CIVLETTERS[CURR_CIV], CURR_CIV), CIVLETTERS[CURR_CIV], [x, y], ancestor=parent, control=player_control)
+    nc = Civilisation('Civ {}+{}'.format(CIVLETTERS[CURR_CIV], CURR_CIV), CIVLETTERS[CURR_CIV], [y, x], ancestor=parent, control=player_control)
     CIVLIST.append(nc)
     CURR_CIV += 1
-    if expand==True:
+    if expand:
         nc.expand()
-
-
-def scan(world, target, delete=False):
-    reslist = []
-    for y in range(HEIGHT):
-        for x in range(WIDTH):
-            if world[y][x] == target:
-                if not delete:
-                    reslist.append([x, y])
-                else:
-                    world[y][x] = ''
-    return reslist
-
 
 def findciv(target):
     for civ in CIVLIST:
         if civ.symbol == target:
             return civ
 
-
-def colour(char):
-    if char == 'g' or char == 'f':
-        return 'green'
-    elif char == '~':
-        return 'blue'
-    elif char == 'm':
-        return 'magenta'
-    elif char == 'j':
-        return 'cyan'
-    elif char == 's':
-        return 'white'
-    elif char == 'd' or char == 'b':
-        return 'yellow'
-    else:
-        return 'white'
-
-
 def display(world, year=None):
     if OS == 'Windows':
         os.system('cls')
     else:
         os.system('clear')
+
     print(f'Year {year}')
+
     for y in range(HEIGHT):
         for x in range(WIDTH):
             if CIV[y][x]:
                 print(termcolor.colored(CIV[y][x], 'red'), end='')
             else:
-                # print(' ', end='')
                 print(termcolor.colored(world[y][x], colour(world[y][x])), end='')
         print('')
 
-
-def update(WORLD):
+def update():
     for cand in CIVLIST:
         cand.execute()
         cand.update()
@@ -316,7 +259,7 @@ def main(mode):
     while YEAR < AGE:
         log(f'Year {YEAR}')
         display(WORLD, YEAR)
-        update(WORLD)
+        update()
         if random.randint(1, 20) == 20:
             seed(WORLD, rpgtools.roll('1d6'))
         YEAR += 1
@@ -324,20 +267,7 @@ def main(mode):
 
 
 if __name__ == '__main__':
-    print('''
-              ...             .       _            .x+=:.      .                        
-       xH88"`~ .x8X      @88>    u            z`    ^%    @88>                      
-     :8888   .f"8888Hf   %8P    88Nu.   u.       .   <k   %8P      ..    .     :    
-    :8888>  X8L  ^""`     .    '88888.o888c    .@8Ned8"    .     .888: x888  x888.  
-    X8888  X888h        .@88u   ^8888  8888  .@^%8888"   .@88u  ~`8888~'888X`?888f` 
-    88888  !88888.     ''888E`   8888  8888 x88:  `)8b. ''888E`   X888  888X '888>  
-    88888   %88888       888E    8888  8888 8888N=*8888   888E    X888  888X '888>  
-    88888 '> `8888>      888E    8888  8888  %8"    R88   888E    X888  888X '888>  
-    `8888L %  ?888   !   888E   .8888b.888P   @8Wou 9%    888E    X888  888X '888>  
-     `8888  `-*""   /    888&    ^Y8888*""  .888888P`     888&   "*88%""*88" '888!` 
-       "888.      :"     R888"     `Y"      `   ^"F       R888"    `~    "    `"`   
-         `""***~"`        ""                               ""                       
-    ''')
-    print('Civsim v0.2 by UtilityHotbar')
+    print(MENU_LOGO)
+    print(f'Civsim {VERSION} by UtilityHotbar')
     mode = rpgtools.generate_menu(['Realm Mode', 'Simulation Mode'])
     main(mode)

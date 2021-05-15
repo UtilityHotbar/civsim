@@ -23,6 +23,7 @@ def roll(dice_string) -> int:
             else:
                 result_list = sorted(result_list)[0:1]
         dice_string = dice_string.replace(dice.group(0), str(sum(result_list)))
+    
     return eval(dice_string)
 
 
