@@ -20,4 +20,4 @@ Currently civsim supports the following features:
 * Possibly some sort of ruler system to see national priorities change over time
 * Expanding over water (Independent agents?)
 
-![Demo image](https://github.com/UtilityHotbar/civsim/blob/master/civsim.png)
+![Demo image](https://github.com/UtilityHotbar/civsim/blob/master/media/civsim.png)
