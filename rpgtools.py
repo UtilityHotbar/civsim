@@ -1,4 +1,4 @@
-# RPG TOOLS v1.0 by UtilityHotbar
+# RPG TOOLS v1.2 by UtilityHotbar
 
 import re
 import random
@@ -7,6 +7,7 @@ DICE_NOTATION = re.compile(r'(\d+)d(\d+)(kh|kl)?(\d+)?')
 
 
 def roll(dice_string) -> int:
+    dice_string = str(dice_string)
     # Selectively find and replace all instances of dice notation e.g. 3d6 or 2d6kh1
     found_string = DICE_NOTATION.finditer(dice_string)
     for dice in found_string:
@@ -23,18 +24,22 @@ def roll(dice_string) -> int:
             else:
                 result_list = sorted(result_list)[0:1]
         dice_string = dice_string.replace(dice.group(0), str(sum(result_list)))
-    
     return eval(dice_string)
 
 
-def generate_menu(options, prompt=None, response_mode='index'):
+def generate_menu(options, prompt=None, response_mode='index', use_attr=None, use_index=None):
     if not prompt:
         print('Your options are:')
     else:
         print(prompt)
     i = 1
     for option in options:
-        print(f'{i}. {option}')
+        if use_attr:
+            print(f'{i}. {option.__getattribute__(use_attr)}')
+        elif use_index:
+            print(f'{i}. {option[use_index]}')
+        else:
+            print(f'{i}. {option}')
         i += 1
     i -= 1
     while True:
