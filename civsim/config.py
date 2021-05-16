@@ -1,8 +1,6 @@
-# Options
+# Game settings
 
-SAVE_LOCATION = 'logfile.txt'
-
-VERSION = 'v0.2'
+LOGFILE_SAVE_LOCATION = 'logfile.txt'
 
 MENU_LOGO = '''
               ...             .       _            .x+=:.      .                        
@@ -19,35 +17,11 @@ MENU_LOGO = '''
          `""***~"`        ""                               ""                       
     '''
 
-# Biome states
+# Game options
 
-UNOCCUPIED = ''
-
-# Civ
-
-CIVLETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_=+[{]}\|;:,<.>/?'
-
-TECH_DEVELOPMENT = 'Develop'
-TERRITORIAL_EXPANSION = 'Expand'
-POPULATION_GROWTH = 'Growth'
-TERRITORIAL_STABILIZATION = 'Stabilise'
-
-CIV_PRIORITIES = [TECH_DEVELOPMENT, TERRITORIAL_EXPANSION, POPULATION_GROWTH, TERRITORIAL_STABILIZATION]
-
-AGE = 500  # In years
 HEIGHT = 20
 WIDTH = 50
-
-# Biomes
-
-BEACH = 'b'
-DESERT = 'd'
-FOREST = 'f'
-GRASSLAND = 'g'
-JUNGLE = 'j'
-MOUNTAIN = 'm'
-OCEAN = '~'
-SNOW = 's'
-TUNDRA = 't'
-
-SEA_LEVEL = 0.001
+PIONERS = 10
+GAME_MODE = ['Realm Mode', 'Simulation Mode']
+AGE = 500
+SEED = 0
