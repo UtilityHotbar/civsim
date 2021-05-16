@@ -15,8 +15,12 @@ from utils import *
 
 OS = platform.system()
 
-tnoise = [PerlinNoise(octaves=2, seed=random.randint(1,10000)), PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=88, seed=random.randint(1,10000))]
-enoise = [PerlinNoise(octaves=4, seed=random.randint(1,10000)), PerlinNoise(octaves=10, seed=random.randint(1,10000)), PerlinNoise(octaves=20, seed=random.randint(1,10000))]
+tnoise = [PerlinNoise(octaves=2, seed=random.randint(1, 10000)),
+          PerlinNoise(octaves=4, seed=random.randint(1, 10000)),
+          PerlinNoise(octaves=88, seed=random.randint(1, 10000))]
+enoise = [PerlinNoise(octaves=4, seed=random.randint(1, 10000)),
+          PerlinNoise(octaves=10, seed=random.randint(1, 10000)),
+          PerlinNoise(octaves=20, seed=random.randint(1, 10000))]
 
 TEMP = [[messy_noise([i / WIDTH, j / HEIGHT], tnoise)+0.1 for i in range(WIDTH)] for j in range(HEIGHT)]
 ELEV = [[messy_noise([i / WIDTH, j / HEIGHT], enoise) for i in range(WIDTH)] for j in range(HEIGHT)]
