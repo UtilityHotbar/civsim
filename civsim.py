@@ -6,7 +6,9 @@ import math
 import os
 import platform
 import random
-import rpgtools.main as rpgtools
+import rpgtools.main
+import rpgtools.lang_gen
+import rpgtools.table_process
 import time
 import termcolor
 
@@ -34,14 +36,15 @@ YEAR = 0
 
 class Civilisation:
     def __init__(self, name, symbol, origin, ancestor=None, control=False):
-        self.name = name
+        self.language = rpgtools.lang_gen.make_language('rpgtools/text/common_words.txt', rpgtools.table_process.Table('rpgtools/text/lang_struct.txt'))
+        self.name = self.language.brute_force_translate(name)
         self.symbol = symbol
         self.territory = [origin]
         self.home_biome = WORLD[origin[0]][origin[1]]
         self.controlled_by_player = control
         # National stats
         self.instability = -10  # Low starting instability to ensure early expansion/survival
-        self.power = rpgtools.roll('3d10')
+        self.power = rpgtools.main.roll('3d10')
         self.powerbase = 1
         self.techlevel = 0
         self.dead = False
@@ -49,9 +52,9 @@ class Civilisation:
         self.priorities = []
         # Diplomatic profile
         self.profile = {
-            'friendliness': rpgtools.roll('1d100'),
-            'trustworthiness': rpgtools.roll('1d100'),
-            'fearfulness': rpgtools.roll('1d100'),
+            'friendliness': rpgtools.main.roll('1d100'),
+            'trustworthiness': rpgtools.main.roll('1d100'),
+            'fearfulness': rpgtools.main.roll('1d100'),
             'reputation': 0
         }
         # Diplomatic relationships
@@ -82,7 +85,7 @@ class Civilisation:
                     c -= 5
                 elif WORLD[ay][ax] == GRASSLAND:  # grasslands easy to spread
                     c += 5
-                roll = rpgtools.roll('1d100')
+                roll = rpgtools.main.roll('1d100')
                 
                 if roll < c:
                     CIV[ay][ax] = self.symbol
@@ -93,13 +96,13 @@ class Civilisation:
         if not self.territory:
             self.dissolve()
         self.powerbase = len(self.territory)  # For each unit of land you hold you gain extra power
-        self.power += self.powerbase*(0.8+(rpgtools.roll('6d10-6d10')/100))+self.powerbase*self.techlevel*3  # National fortune = Fortune (normal distribution) + tech
-        self.instability += random.randint(1, math.ceil(self.powerbase/10)+1) - rpgtools.roll('3d6-3d6')
-        if rpgtools.roll('2d100') < self.instability:
-            if rpgtools.roll('1d6') == 1:
+        self.power += self.powerbase*(0.8+(rpgtools.main.roll('6d10-6d10')/100))+self.powerbase*self.techlevel*3  # National fortune = Fortune (normal distribution) + tech
+        self.instability += random.randint(1, math.ceil(self.powerbase/10)+1) - rpgtools.main.roll('3d6-3d6')
+        if rpgtools.main.roll('2d100') < self.instability:
+            if rpgtools.main.roll('1d6') == 1:
                 self.dissolve()
             else:
-                if rpgtools.roll('1d6') < 4:
+                if rpgtools.main.roll('1d6') < 4:
                     self.collapse()
                 else:
                     self.collapse(decimate=True)
@@ -120,7 +123,7 @@ class Civilisation:
     def collapse(self, decimate=False):
         global CIVLETTERS
         log(f'{self.name} is collapsing.')
-        self.instability += rpgtools.roll(f'{math.ceil(self.powerbase/10)}d6')
+        self.instability += rpgtools.main.roll(f'{math.ceil(self.powerbase/10)}d6')
         self.power /= random.randint(2, 4)
         seeding_targets = []
         for _ in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
@@ -150,7 +153,7 @@ class Civilisation:
         for n in range(curr_actions):
             if self.controlled_by_player:
                 print(f'YOU HAVE {curr_actions-n} ACTIONS REMAINING.')
-                curr_option = CIV_PRIORITIES[rpgtools.generate_menu(CIV_PRIORITIES)]
+                curr_option = CIV_PRIORITIES[rpgtools.main.generate_menu(CIV_PRIORITIES)]
             else:
                 curr_option = random.choice(self.priorities)
             if curr_option == TERRITORIAL_EXPANSION:
@@ -164,12 +167,12 @@ class Civilisation:
                 log(f'{self.name} is developing')
                 if self.power > 20:
                     self.power -= 20
-                    self.techlevel += rpgtools.roll('1d10')/10
+                    self.techlevel += rpgtools.main.roll('1d10')/10
                 else:
                     log(f'{self.name} failed to develop')
             elif curr_option == POPULATION_GROWTH:
                 log(f'{self.name} is growing')
-                bank += self.power * (rpgtools.roll('1d4')/10)
+                bank += self.power * (rpgtools.main.roll('1d4')/10)
             elif curr_option == TERRITORIAL_STABILIZATION:
                 log(f'{self.name} is stabilising')
                 self.instability *= random.random()
@@ -265,7 +268,7 @@ def main(mode):
         display(WORLD, YEAR)
         update()
         if random.randint(1, 20) == 20:
-            seed(WORLD, rpgtools.roll('1d6'))
+            seed(WORLD, rpgtools.main.roll('1d6'))
         YEAR += 1
         time.sleep(0.1)
 
@@ -273,5 +276,5 @@ def main(mode):
 if __name__ == '__main__':
     print(MENU_LOGO)
     print(f'Civsim {VERSION} by UtilityHotbar')
-    mode = rpgtools.generate_menu(['Realm Mode', 'Simulation Mode'])
+    mode = rpgtools.main.generate_menu(['Realm Mode', 'Simulation Mode'])
     main(mode)
