@@ -1,8 +1,10 @@
+"""Civsim constants."""
+
 # Game settings
 
 LOGFILE_SAVE_LOCATION = 'logfile.txt'
 
-MENU_LOGO = '''
+MENU_LOGO = ('''
               ...             .       _            .x+=:.      .                        
        xH88"`~ .x8X      @88>    u            z`    ^%    @88>                      
      :8888   .f"8888Hf   %8P    88Nu.   u.       .   <k   %8P      ..    .     :    
@@ -15,7 +17,7 @@ MENU_LOGO = '''
      `8888  `-*""   /    888&    ^Y8888*""  .888888P`     888&   "*88%""*88" '888!` 
        "888.      :"     R888"     `Y"      `   ^"F       R888"    `~    "    `"`   
          `""***~"`        ""                               ""                       
-    '''
+    ''')  # noqa
 
 # Game options
 

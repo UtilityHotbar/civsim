@@ -1,3 +1,5 @@
+"""World constants."""
+
 # Biomes
 
 BEACH = 'b'
@@ -19,7 +21,7 @@ BIOME_COLOURS = {
     MOUNTAIN: 'magenta',
     OCEAN: 'blue',
     SNOW: 'white',
-    TUNDRA: 'white'
+    TUNDRA: 'white',
 }
 
 SEA_LEVEL = 0.001
@@ -41,5 +43,5 @@ DISASTERS = [
     'thunderstorm',
     'tornado',
     'wildfire',
-    'impact event'
+    'impact event',
 ]

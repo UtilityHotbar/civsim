@@ -1,22 +1,24 @@
+"""Project setup."""
+
 from setuptools import find_packages, setup
 
 setup(
-    name="civsim",
-    description="A basic civilisation simulation and modelling system",
-    long_description=open("README.md", 'r').read(),
+    name='civsim',
+    description='A basic civilisation simulation and modelling system',
+    long_description=open('README.md', 'r').read(),
     long_description_content_type='text/markdown',
 
-    author="UtilityHotbar",
-    url="https://github.com/UtilityHotbar/civsim/",
+    author='UtilityHotbar',
+    url='https://github.com/UtilityHotbar/civsim/',
 
-    install_requires=[open("requirements.txt", 'r').read()],
+    install_requires=[open('requirements.txt', 'r').read()],
 
     packages=find_packages(include=['civsim', 'civsim.*']),
 
-    setup_requires=["setuptools_scm"],
+    setup_requires=['setuptools_scm'],
     use_scm_version={
-        "write_to": "civsim/scmversion.py",
-        "write_to_template": "__version__ = '{version}'\n",
+        'write_to': 'civsim/scmversion.py',
+        'write_to_template': "__version__ = '{version}'\n",
     },
 
     include_package_data=True,

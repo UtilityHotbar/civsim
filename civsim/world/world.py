@@ -1,34 +1,32 @@
-from perlin_noise import PerlinNoise
+"""Module related with all the world generation stuff."""
+
 from random import randint
 
 from civsim.civ.constants import UNOCCUPIED
-from civsim.world.constants import BEACH, DESERT, FOREST, GRASSLAND, JUNGLE, MOUNTAIN, OCEAN, SEA_LEVEL, SNOW, TUNDRA
+from civsim.world.constants import (BEACH, DESERT, FOREST, GRASSLAND, JUNGLE,
+                                    MOUNTAIN, OCEAN, SEA_LEVEL, SNOW, TUNDRA)
 from civsim.world.utils import messy_noise
+from perlin_noise import PerlinNoise
 
 
 class World:
-    """
-    A class to build a world.
+    """A class to build a world."""
 
-    """
     tnoise = [
-        PerlinNoise(octaves=2, seed=randint(1,10000)),
-        PerlinNoise(octaves=4, seed=randint(1,10000)),
-        PerlinNoise(octaves=88, seed=randint(1,10000))
+        PerlinNoise(octaves=2, seed=randint(1, 10000)),
+        PerlinNoise(octaves=4, seed=randint(1, 10000)),
+        PerlinNoise(octaves=88, seed=randint(1, 10000)),
     ]
     enoise = [
-        PerlinNoise(octaves=4, seed=randint(1,10000)),
-        PerlinNoise(octaves=10, seed=randint(1,10000)),
-        PerlinNoise(octaves=20, seed=randint(1,10000))
+        PerlinNoise(octaves=4, seed=randint(1, 10000)),
+        PerlinNoise(octaves=10, seed=randint(1, 10000)),
+        PerlinNoise(octaves=20, seed=randint(1, 10000)),
     ]
 
     def __init__(self, height, width):
-        """
-        Initialize world parameters.
-
-        """
-        self._name = 'Terra' # TODO random planet name generator
-        self._symbol = '🜨' # TODO random symbol generator
+        """Initialize world parameters."""
+        self._name = 'Terra'  # TODO random planet name generator
+        self._symbol = '🜨'  # TODO random symbol generator
         self._height = height
         self._width = width
         self._emap = None
@@ -36,36 +34,30 @@ class World:
         self._wgrid = None
         self._cgrid = None
         self._year = 0
-    
+
     def __str__(self):
-        """
-        Ostende te!
-        
-        """
+        """Ostende te!."""
         return f'{self._name} {self._symbol}'
 
     def genesis(self):
         """
         In the beginning Python created the heavens and the earth.
-        
+
         Generate world structure, temperature map, elevation map and fill world with biomes.
-        
+
         """
         self._wgrid = [[OCEAN]*self._width for _ in range(self._height)]
         self._cgrid = [[UNOCCUPIED]*self._width for _ in range(self._height)]
 
         self._emap = [[messy_noise([i / self._width, j / self._height], type(self).enoise)
-         for i in range(self._width)] for j in range(self._height)]
-        self._tmap = [[messy_noise([i / self._width, j / self._height], type(self).tnoise)+0.1
-         for i in range(self._width)] for j in range(self._height)]
+                       for i in range(self._width)] for j in range(self._height)]
+        self._tmap = [[messy_noise([i / self._width, j / self._height], type(self).tnoise) +
+                       0.1 for i in range(self._width)] for j in range(self._height)]
 
         self._fill_with_biomes()
 
     def _fill_with_biomes(self):
-        """
-        Let the water under the sky be gathered to one place, and let dry ground appear.
-        
-        """
+        """Let the water under the sky be gathered to one place, and let dry ground appear."""
         for lat in range(self._height):
             for long in range(self._width):
                 local_t = self._tmap[lat][long]
@@ -87,34 +79,42 @@ class World:
                         self._wgrid[lat][long] = JUNGLE
                     else:
                         self._wgrid[lat][long] = DESERT
-    
+
     @property
     def wgrid(self):
+        """Return world's grid."""
         return self._wgrid
 
     @property
     def cgrid(self):
+        """Return civilisation's grid."""
         return self._cgrid
 
     @property
     def height(self):
+        """Return world's height."""
         return self._height
 
     @property
     def width(self):
+        """Return world's width."""
         return self._width
 
     @property
     def year(self):
+        """Return world's year."""
         return self._year
+
+    def inc_year(self):
+        """Increase by one world's year."""
+        self._year += 1
 
     @property
     def name(self):
+        """Return world's name."""
         return self._name
 
     @property
     def symbol(self):
+        """Return world's symbol."""
         return self._symbol
-    
-    def inc_year(self):
-        self._year +=1

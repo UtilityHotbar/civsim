@@ -1,15 +1,15 @@
-from civsim.utils import log
+"""Main agent which controls gameloop, world and civ creation/interactions."""
+import os
 from platform import system
 from random import randint
-from termcolor import colored
 from time import sleep
 
-import os
-
-from civsim.third.rpgtools.main import roll
+from termcolor import colored
 
 from civsim.civ.civ import Civilisation
-from civsim.config import GAME_MODE, AGE
+from civsim.config import AGE
+from civsim.third.rpgtools.main import roll
+from civsim.utils import log
 from civsim.world.constants import BIOME_COLOURS, OCEAN
 from civsim.world.world import World
 
@@ -17,37 +17,25 @@ OS = system()
 
 
 class GameMaster():
-    """
-    A class to rule them all
+    """A class to rule them all."""
 
-    """
     world_compendium = {}
     civ_compendium = {}
 
     def __init__(self, mode, debug):
-        """
-        Initialize Eden project parameters.
-
-        """
-        self._cpu = False if mode == 0 else True
+        """Initialize Eden project parameters."""
+        self._cpu = bool(mode)
         self._debug = debug
 
-
     def creation(self, height=20, width=50, pioners=10):
-        """
-        You only have 7 days!
-
-        """
+        """You only have 7 days!."""
         world = World(height, width)
         world.genesis()
         type(self).world_compendium[world.name] = world
         self._adam(pioners, world)
 
     def _adam(self, pioners, world):
-        """
-        Early backers
-
-        """
+        """Early backers."""
         for _ in range(pioners):
             lat = randint(0, world.height-1)
             long = randint(0, world.width-1)
@@ -60,6 +48,7 @@ class GameMaster():
                     Civilisation.born_civ(lat, long, world)
 
     def hourglass(self):
+        """Release the Sands."""
         # TODO rework for multiple worlds
         for _, world in type(self).world_compendium.items():
             while world.year < AGE:
@@ -71,20 +60,18 @@ class GameMaster():
                 sleep(0.1)
 
     def _progress(self):
-        """
-        Avanti
-
-        """
+        """Avanti."""
         # list is needed because items returns an iterator and we are updating the dictionary
         civs_this_turn = list(type(self).civ_compendium.items())
         for _, civ in civs_this_turn:
-            if civ: # not dead
+            if civ:
                 civ.actions()
-                civ.registry()
+                civ.cadastre()
             else:
-                log(f'GHOST CIV')
+                log('GHOST CIV')
 
     def display(self):
+        """Depending of the user system."""
         # TODO rework for multiple worlds
         if OS == 'Windows':
             os.system('cls')

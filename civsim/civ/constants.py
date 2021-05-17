@@ -1,3 +1,5 @@
+"""Civilisation constants."""
+
 # Cell states
 
 UNOCCUPIED = ''
@@ -13,7 +15,7 @@ CIV_PRIORITIES = [
     TECH_DEVELOPMENT,
     TERRITORIAL_EXPANSION,
     POPULATION_GROWTH,
-    TERRITORIAL_STABILIZATION
+    TERRITORIAL_STABILIZATION,
 ]
 
 COMMONS_WORLD_PATH = 'civsim/third/rpgtools/text/common_words.txt'

@@ -1,13 +1,13 @@
-import random
-from civsim.third.rpgtools import main as rpgtools
-
+"""Script to run the program."""
+from civsim.__version__ import __version__
 from civsim.config import GAME_MODE, HEIGHT, MENU_LOGO, PIONERS, WIDTH
 from civsim.game_master import GameMaster
 from civsim.scripts.utils import DefaultArgumentParser, initialize_params
-from civsim.__version__ import __version__
+from civsim.third.rpgtools import main as rpgtools
 
 
 def main():
+    """Run the program."""
     parser = DefaultArgumentParser()
     args = parser.parse_args()
 
