@@ -9,6 +9,6 @@ def find_civ(emblem):
 
     found = GameMaster.civ_compendium.get(emblem, None)
     if not found:
-        raise Exception(f'Could not found civilisation {emblem}')
+        raise Exception(f'Could not find civilisation {emblem}')
 
     return found
