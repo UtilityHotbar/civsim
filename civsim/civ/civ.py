@@ -1,13 +1,21 @@
 from math import ceil, floor
 from random import choice, randint, sample, random
 
-#from civsim.third.rpgtools import lang_gen
-from civsim.third.rpgtools.main import roll, generate_menu
-#from civsim.third.rpgtools import table_process
+from civsim.third.rpgtools import lang_gen, table_process
+from civsim.third.rpgtools.main import generate_menu, roll
 
-from civsim.civ.utils import find_civ, sweep_the_land
-from civsim.civ.constants import CIV_PRIORITIES, TECH_DEVELOPMENT, TERRITORIAL_EXPANSION, POPULATION_GROWTH, TERRITORIAL_STABILIZATION, UNOCCUPIED
 from civsim.utils import clamp, log
+from civsim.civ.utils import find_civ, sweep_the_land
+from civsim.civ.constants import (
+    CIV_PRIORITIES,
+    TECH_DEVELOPMENT,
+    TERRITORIAL_EXPANSION,
+    POPULATION_GROWTH,
+    TERRITORIAL_STABILIZATION,
+    UNOCCUPIED,
+    COMMONS_WORLD_PATH,
+    LANG_STRUCT_PATH
+    )
 from civsim.world.constants import DISASTERS, GRASSLAND, MOUNTAIN, OCEAN
 
 
@@ -17,8 +25,8 @@ class Civilisation:
     civ_emblems = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_=+[{]}\|;:,<.>/?'
 
     def __init__(self, name, emblem, origin, world, ancestor=None, cpu=True):
-        self._language = None#lang_gen.make_language('rpgtools/text/common_words.txt', table_process.Table('rpgtools/text/lang_struct.txt'))
-        self._name = name#self.language.brute_force_translate(name)
+        self._language = lang_gen.make_language(COMMONS_WORLD_PATH, table_process.Table(LANG_STRUCT_PATH))
+        self._name = self._language.brute_force_translate(name)
         self._emblem = emblem
         self._world = world
         self._territory = [origin]
