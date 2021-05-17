@@ -5,7 +5,12 @@ Civsim is a basic civilisation simulation and modelling system built in Python 3
 ```
 perlin_noise==1.7
 termcolor==1.1.0
+spacy==3.0.6
 ```
+
+In addition, the spaCy `en_core_web_sm` package is required. To install the package, install SpaCy and then run
+
+`python -m spacy download en_core_web_sm`
 
 ## Features
 Currently civsim supports the following features:
