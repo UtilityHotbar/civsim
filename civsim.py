@@ -145,7 +145,7 @@ class Civilisation:
         maxactions = math.ceil(self.powerbase/5+1)
         curr_actions = random.randint(baseactions, maxactions)
         if self.controlled_by_player:
-            print(f'YOU ARE CIV {self.name}.\n'
+            print(f'YOU ARE CIV {self.name} ({self.symbol}).\n'
                   f'Power: {self.power} (Grow or expand to increase your power)\n'
                   f'Territory: {self.powerbase} (Expanding requires 10 power)\n'
                   f'Tech level: {self.techlevel} (Development requires 20 power)\n'
