@@ -1,10 +1,10 @@
-"""Civsim constants."""
+# Options
 
-# Game settings
+SAVE_LOCATION = 'logfile.txt'
 
-LOGFILE_SAVE_LOCATION = 'logfile.txt'
+VERSION = 'v0.2'
 
-MENU_LOGO = ('''
+MENU_LOGO = '''
               ...             .       _            .x+=:.      .                        
        xH88"`~ .x8X      @88>    u            z`    ^%    @88>                      
      :8888   .f"8888Hf   %8P    88Nu.   u.       .   <k   %8P      ..    .     :    
@@ -17,13 +17,37 @@ MENU_LOGO = ('''
      `8888  `-*""   /    888&    ^Y8888*""  .888888P`     888&   "*88%""*88" '888!` 
        "888.      :"     R888"     `Y"      `   ^"F       R888"    `~    "    `"`   
          `""***~"`        ""                               ""                       
-    ''')  # noqa
+    '''
 
-# Game options
+# Biome states
 
+UNOCCUPIED = ''
+
+# Civ
+
+CIVLETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()-_=+[{]}\|;:,<.>/?'
+
+TECH_DEVELOPMENT = 'Develop'
+TERRITORIAL_EXPANSION = 'Expand'
+POPULATION_GROWTH = 'Growth'
+TERRITORIAL_STABILIZATION = 'Stabilise'
+
+CIV_PRIORITIES = [TECH_DEVELOPMENT, TERRITORIAL_EXPANSION, POPULATION_GROWTH, TERRITORIAL_STABILIZATION]
+
+AGE = 500  # In years
 HEIGHT = 20
 WIDTH = 50
-PIONERS = 10
-GAME_MODE = ['Realm Mode', 'Simulation Mode']
-AGE = 500
-SEED = 0
+
+# Biomes
+
+BEACH = 'b'
+DESERT = 'd'
+FOREST = 'f'
+GRASSLAND = 'g'
+JUNGLE = 'j'
+MOUNTAIN = 'm'
+OCEAN = '~'
+SNOW = 's'
+TUNDRA = 't'
+
+SEA_LEVEL = 0.001

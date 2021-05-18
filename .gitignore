@@ -1,5 +1,5 @@
 logfile.txt
-civsim/third/
+rpgtools/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -54,12 +54,11 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Translations
-*.mo
-*.pot
-
 # PyBuilder
 target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
 
 # IPython
 profile_default/
@@ -86,8 +85,3 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json

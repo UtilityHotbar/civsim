@@ -1,6 +1,2 @@
 perlin_noise==1.7
-pre-commit
-setuptools>=42
-spacy==3.0.6
 termcolor==1.1.0
-wheel
