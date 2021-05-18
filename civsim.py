@@ -52,7 +52,7 @@ class Civilisation:
         self.techlevel = 0
         self.dead = False
         # Internal priorities
-        self.priorities = []
+        self.priorities = [item for priority in CIV_PRIORITIES for item in (priority,) * randint(1, 8)]
         # Diplomatic profile
         self.profile = {
             'friendliness': rpgtools.main.roll('1d100'),
@@ -63,9 +63,6 @@ class Civilisation:
         # Diplomatic relationships
         self.relationships = {}
         self.age = 0
-        for item in CIV_PRIORITIES:  # Civilisation priorities determined randomly
-            for _ in range(random.randint(1, 8)):
-                self.priorities.append(item)
 
     def expand(self):
         if self.dead or not self.territory:
@@ -92,9 +89,8 @@ class Civilisation:
                     c -= 5
                 elif WORLD[ay][ax] == GRASSLAND:  # grasslands easy to spread
                     c += 5
-                roll = rpgtools.main.roll('1d100')
 
-                if roll < c:
+                if rpgtools.main.roll('1d100') < c:
                     CIV[ay][ax] = self.symbol
                     self.territory.append([ay, ax])
 
@@ -123,11 +119,12 @@ class Civilisation:
         if self in CIVLIST:
             CIVLIST.remove(self)
         CIVLETTERS += self.symbol
-        scan(CIV, self.symbol, delete=True)
         if self.territory:
-            for _ in range(random.randint(1, math.ceil(self.powerbase/10)+1)):
-                newseed = random.choice(self.territory)
-                make_civ(newseed[0], newseed[1])
+            scan(CIV, self.symbol, delete=True)
+            n = range(random.randint(1, math.ceil(self.powerbase/10)+1))
+            remanents = random.sample(self.territory, min(len(self.territory), n))
+            for remanent in remanents:
+                make_civ(remanent[0], remanent[1])
 
     def collapse(self, decimate=False):
         global CIVLETTERS
@@ -135,19 +132,21 @@ class Civilisation:
         self.instability += rpgtools.main.roll(
             f'{math.ceil(self.powerbase/10)}d6')
         self.power /= random.randint(2, 4)
-        seeding_targets = []
-        for _ in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
-            rmtarget = random.choice(self.territory)
-            seeding_targets.append(rmtarget)
-            self.territory.remove(rmtarget)
-            CIV[rmtarget[0]][rmtarget[1]] = UNOCCUPIED
-        if not decimate and seeding_targets:  # Natural disasters do not create new states
-            for _ in range(random.randint(1, math.ceil(self.powerbase / 10) + 1)):
-                newseed = random.choice(seeding_targets)
-                seeding_targets.remove(newseed)
-                make_civ(newseed[0], newseed[1], parent=self, expand=True)
-                if not seeding_targets:
-                    return
+        n = random.randint(math.floor(len(self.territory)/1.5), len(self.territory))
+        rebels = random.sample(self.territory, min(len(self.territory), n))
+        for rebel in rebels:
+            self.territory.remove(rebel)
+            CIV[rebel[0]][rebel[1]] = UNOCCUPIED
+        if not decimate and rebels:  # Natural disasters do not create new states
+            n = random.randint(1, math.ceil(self.base_power / 10) + 1)
+            warlords = random.sample(rebels, min(len(rebels), n))
+            new_civs = []
+            for warlord in warlords:
+                new_civ = make_civ(warlord[0], warlord[1], parent=self)
+                if new_civ:
+                    new_civs.append(new_civ)
+            for civ in new_civs:
+                civ.expand()
 
     def execute(self):
         bank = 0
@@ -239,6 +238,7 @@ def make_civ(y, x, parent=None, expand=False, player_control=False):
     CURR_CIV += 1
     if expand:
         nc.expand()
+    return nc
 
 
 def findciv(target):
