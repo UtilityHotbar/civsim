@@ -133,16 +133,16 @@ class Civilisation:
             f'{math.ceil(self.powerbase/10)}d6')
         self.power /= random.randint(2, 4)
         n = random.randint(math.floor(len(self.territory)/1.5), len(self.territory))
-        rebels = random.sample(self.territory, min(len(self.territory), n))
-        for rebel in rebels:
-            self.territory.remove(rebel)
-            CIV[rebel[0]][rebel[1]] = UNOCCUPIED
-        if not decimate and rebels:  # Natural disasters do not create new states
+        lost_territory = random.sample(self.territory, min(len(self.territory), n))
+        for area in lost_territory:
+            self.territory.remove(area)
+            CIV[area[0]][area[1]] = UNOCCUPIED
+        if not decimate and lost_territory:  # Natural disasters do not create new states
             n = random.randint(1, math.ceil(self.base_power / 10) + 1)
-            warlords = random.sample(rebels, min(len(rebels), n))
+            successor_states = random.sample(lost_territory, min(len(lost_territory), n))
             new_civs = []
-            for warlord in warlords:
-                new_civ = make_civ(warlord[0], warlord[1], parent=self)
+            for successor_state in successor_states:
+                new_civ = make_civ(successor_state[0], successor_state[1], parent=self)
                 if new_civ:
                     new_civs.append(new_civ)
             for civ in new_civs:
