@@ -122,9 +122,9 @@ class Civilisation:
         if self.territory:
             scan(CIV, self.symbol, delete=True)
             n = range(random.randint(1, math.ceil(self.powerbase/10)+1))
-            remanents = random.sample(self.territory, min(len(self.territory), n))
-            for remanent in remanents:
-                make_civ(remanent[0], remanent[1])
+            remnant = random.sample(self.territory, min(len(self.territory), n))
+            for remnant in remnants:
+                make_civ(remnant[0], remnant[1])
 
     def collapse(self, decimate=False):
         global CIVLETTERS
