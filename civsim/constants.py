@@ -51,3 +51,6 @@ SNOW = 's'
 TUNDRA = 't'
 
 SEA_LEVEL = 0.001
+
+COMMONS_WORLD_PATH = 'civsim/third/rpgtools/text/common_words.txt'
+LANG_STRUCT_PATH = 'civsim/third/rpgtools/text/lang_struct.txt'
