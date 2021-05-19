@@ -1,17 +1,17 @@
 # Civsim v0.2 by UtilityHotbar
 
-from perlin_noise import PerlinNoise
-
 import math
 import os
 import platform
 import random
-import rpgtools.main
-import rpgtools.lang_gen
-import rpgtools.table_process
 import time
-import termcolor
 
+import termcolor
+from perlin_noise import PerlinNoise
+
+import rpgtools.lang_gen
+import rpgtools.main
+import rpgtools.table_process
 from constants import *
 from utils import *
 
@@ -24,8 +24,10 @@ enoise = [PerlinNoise(octaves=4, seed=random.randint(1, 10000)),
           PerlinNoise(octaves=10, seed=random.randint(1, 10000)),
           PerlinNoise(octaves=20, seed=random.randint(1, 10000))]
 
-TEMP = [[messy_noise([i / WIDTH, j / HEIGHT], tnoise)+0.1 for i in range(WIDTH)] for j in range(HEIGHT)]
-ELEV = [[messy_noise([i / WIDTH, j / HEIGHT], enoise) for i in range(WIDTH)] for j in range(HEIGHT)]
+TEMP = [[messy_noise([i / WIDTH, j / HEIGHT], tnoise) +
+         0.1 for i in range(WIDTH)] for j in range(HEIGHT)]
+ELEV = [[messy_noise([i / WIDTH, j / HEIGHT], enoise)
+         for i in range(WIDTH)] for j in range(HEIGHT)]
 WORLD = [[OCEAN]*WIDTH for _ in range(HEIGHT)]
 CIV = [[UNOCCUPIED]*WIDTH for _ in range(HEIGHT)]
 CURR_CIV = 0
@@ -36,7 +38,8 @@ YEAR = 0
 
 class Civilisation:
     def __init__(self, name, symbol, origin, ancestor=None, control=False):
-        self.language = rpgtools.lang_gen.make_language('rpgtools/text/common_words.txt', rpgtools.table_process.Table('rpgtools/text/lang_struct.txt'))
+        self.language = rpgtools.lang_gen.make_language(
+            'rpgtools/text/common_words.txt', rpgtools.table_process.Table('rpgtools/text/lang_struct.txt'))
         self.name = self.language.brute_force_translate(name)
         self.symbol = symbol
         self.territory = [origin]
@@ -49,7 +52,7 @@ class Civilisation:
         self.techlevel = 0
         self.dead = False
         # Internal priorities
-        self.priorities = []
+        self.priorities = [item for priority in CIV_PRIORITIES for item in (priority,) * randint(1, 8)]
         # Diplomatic profile
         self.profile = {
             'friendliness': rpgtools.main.roll('1d100'),
@@ -60,9 +63,6 @@ class Civilisation:
         # Diplomatic relationships
         self.relationships = {}
         self.age = 0
-        for item in CIV_PRIORITIES:  # Civilisation priorities determined randomly
-            for _ in range(random.randint(1, 8)):
-                self.priorities.append(item)
 
     def expand(self):
         if self.dead or not self.territory:
@@ -71,12 +71,16 @@ class Civilisation:
         for _ in range(random.randint(2, 5)):
             attempt = random.choice(self.territory)
             rng = 1
-            ax = random.randint(clamp(attempt[1]-rng, nmax=WIDTH-1), clamp(attempt[1]+rng, nmax=WIDTH-1))
-            ay = random.randint(clamp(attempt[0]-rng, nmax=HEIGHT-1), clamp(attempt[0]+rng, nmax=HEIGHT-1))
+            ax = random.randint(
+                clamp(attempt[1]-rng, nmax=WIDTH-1), clamp(attempt[1]+rng, nmax=WIDTH-1))
+            ay = random.randint(
+                clamp(attempt[0]-rng, nmax=HEIGHT-1), clamp(attempt[0]+rng, nmax=HEIGHT-1))
             attempt_loc = WORLD[ay][ax]
-            
-            if not (attempt_loc == OCEAN or [ay, ax] in self.territory):  # Cannot expand into water
-                c = 10 + max(50, 5*self.techlevel)  # Base 10% success chance, max +50% from technology
+
+            # Cannot expand into water
+            if not (attempt_loc == OCEAN or [ay, ax] in self.territory):
+                # Base 10% success chance, max +50% from technology
+                c = 10 + max(50, 5*self.techlevel)
                 if attempt_loc == self.home_biome:  # Bonus chance for expansion if attempting to expand into base biome
                     c += 20
                 if CIV[ay][ax] != UNOCCUPIED:  # Spreading into occupied squares is harder
@@ -85,9 +89,8 @@ class Civilisation:
                     c -= 5
                 elif WORLD[ay][ax] == GRASSLAND:  # grasslands easy to spread
                     c += 5
-                roll = rpgtools.main.roll('1d100')
-                
-                if roll < c:
+
+                if rpgtools.main.roll('1d100') < c:
                     CIV[ay][ax] = self.symbol
                     self.territory.append([ay, ax])
 
@@ -95,8 +98,10 @@ class Civilisation:
         self.age += 1
         if not self.territory:
             self.dissolve()
-        self.powerbase = len(self.territory)  # For each unit of land you hold you gain extra power
-        self.power += self.powerbase*(0.8+(rpgtools.main.roll('6d10-6d10')/100))+self.powerbase*self.techlevel*3  # National fortune = Fortune (normal distribution) + tech
+        # For each unit of land you hold you gain extra power
+        self.powerbase = len(self.territory)
+        # National fortune = Fortune (normal distribution) + tech
+        self.power += self.powerbase * (0.8+(rpgtools.main.roll('6d10-6d10')/100)) + self.powerbase*self.techlevel*3
         self.instability += random.randint(1, math.ceil(self.powerbase/10)+1) - rpgtools.main.roll('3d6-3d6')
         if rpgtools.main.roll('2d100') < self.instability:
             if rpgtools.main.roll('1d6') == 1:
@@ -114,30 +119,34 @@ class Civilisation:
         if self in CIVLIST:
             CIVLIST.remove(self)
         CIVLETTERS += self.symbol
-        scan(CIV, self.symbol, delete=True)
         if self.territory:
-            for _ in range(random.randint(1, math.ceil(self.powerbase/10)+1)):
-                newseed = random.choice(self.territory)
-                make_civ(newseed[0], newseed[1])
+            scan(CIV, self.symbol, delete=True)
+            n = range(random.randint(1, math.ceil(self.powerbase/10)+1))
+            remnant = random.sample(self.territory, min(len(self.territory), n))
+            for remnant in remnants:
+                make_civ(remnant[0], remnant[1])
 
     def collapse(self, decimate=False):
         global CIVLETTERS
         log(f'{self.name} is collapsing.')
-        self.instability += rpgtools.main.roll(f'{math.ceil(self.powerbase/10)}d6')
+        self.instability += rpgtools.main.roll(
+            f'{math.ceil(self.powerbase/10)}d6')
         self.power /= random.randint(2, 4)
-        seeding_targets = []
-        for _ in range(random.randint(math.floor(len(self.territory)/1.5), len(self.territory))):
-            rmtarget = random.choice(self.territory)
-            seeding_targets.append(rmtarget)
-            self.territory.remove(rmtarget)
-            CIV[rmtarget[0]][rmtarget[1]] = UNOCCUPIED
-        if not decimate and seeding_targets:  # Natural disasters do not create new states
-            for _ in range(random.randint(1, math.ceil(self.powerbase / 10) + 1)):
-                newseed = random.choice(seeding_targets)
-                seeding_targets.remove(newseed)
-                make_civ(newseed[0], newseed[1], parent=self, expand=True)
-                if not seeding_targets:
-                    return
+        n = random.randint(math.floor(len(self.territory)/1.5), len(self.territory))
+        lost_territory = random.sample(self.territory, min(len(self.territory), n))
+        for area in lost_territory:
+            self.territory.remove(area)
+            CIV[area[0]][area[1]] = UNOCCUPIED
+        if not decimate and lost_territory:  # Natural disasters do not create new states
+            n = random.randint(1, math.ceil(self.base_power / 10) + 1)
+            successor_states = random.sample(lost_territory, min(len(lost_territory), n))
+            new_civs = []
+            for successor_state in successor_states:
+                new_civ = make_civ(successor_state[0], successor_state[1], parent=self)
+                if new_civ:
+                    new_civs.append(new_civ)
+            for civ in new_civs:
+                civ.expand()
 
     def execute(self):
         bank = 0
@@ -146,10 +155,10 @@ class Civilisation:
         curr_actions = random.randint(baseactions, maxactions)
         if self.controlled_by_player:
             print(f'YOU ARE CIV {self.name} ({self.symbol}).\n'
-                  f'Power: {self.power} (Grow or expand to increase your power)\n'
+                  f'Power: {self.power:.2f} (Grow or expand to increase your power)\n'
                   f'Territory: {self.powerbase} (Expanding requires 10 power)\n'
-                  f'Tech level: {self.techlevel} (Development requires 20 power)\n'
-                  f'Instability: {self.instability} (Reducing instability is free)\n')
+                  f'Tech level: {self.techlevel:.2f} (Development requires 20 power)\n'
+                  f'Instability: {self.instability:.2f} (Reducing instability is free)\n')
         for n in range(curr_actions):
             if self.controlled_by_player:
                 print(f'YOU HAVE {curr_actions-n} ACTIONS REMAINING.')
@@ -203,6 +212,7 @@ def generate(world, tmap, emap):
                     world[y][x] = DESERT
     return world
 
+
 def seed(world, num_attempts=10, player_control=False):
     global CURR_CIV
     pc = player_control
@@ -216,21 +226,26 @@ def seed(world, num_attempts=10, player_control=False):
             if pc:
                 pc = False
 
+
 def make_civ(y, x, parent=None, expand=False, player_control=False):
     global CURR_CIV
     if CURR_CIV > len(CIVLETTERS)-1:
         return
     CIV[y][x] = CIVLETTERS[CURR_CIV]
-    nc = Civilisation('Civ {}+{}'.format(CIVLETTERS[CURR_CIV], CURR_CIV), CIVLETTERS[CURR_CIV], [y, x], ancestor=parent, control=player_control)
+    nc = Civilisation('Civ {}+{}'.format(CIVLETTERS[CURR_CIV], CURR_CIV), CIVLETTERS[CURR_CIV], [y, x],
+                      ancestor=parent, control=player_control)
     CIVLIST.append(nc)
     CURR_CIV += 1
     if expand:
         nc.expand()
+    return nc
+
 
 def findciv(target):
     for civ in CIVLIST:
         if civ.symbol == target:
             return civ
+
 
 def display(world, year=None):
     if OS == 'Windows':
@@ -247,6 +262,7 @@ def display(world, year=None):
             else:
                 print(termcolor.colored(world[y][x], colour(world[y][x])), end='')
         print('')
+
 
 def update():
     for cand in CIVLIST:

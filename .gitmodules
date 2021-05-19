@@ -1,3 +1,4 @@
 [submodule "rpgtools"]
 	path = rpgtools
 	url = https://github.com/UtilityHotbar/rpgtools
+	ignore = dirty

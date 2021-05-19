@@ -1,2 +1,3 @@
 perlin_noise==1.7
 termcolor==1.1.0
+spacy==3.0.6
