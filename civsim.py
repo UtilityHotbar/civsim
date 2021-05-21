@@ -79,6 +79,11 @@ class Planet:
                         self.world[y][x] = DESERT
         return self.world
 
+    def update(self):
+        for cand in self.civlist:
+            cand.execute()
+            cand.update()
+
 class Civilisation:
     def __init__(self, name, symbol, origin, homeworld, ancestor=None, control=False):
         self.language = rpgtools.lang_gen.make_language(
@@ -284,12 +289,6 @@ def display(world, year=None):
     print(newstr)
 
 
-def update(world):
-    for cand in world.civlist:
-        cand.execute()
-        cand.update()
-
-
 def main(mode):
     if mode == 0:
         pc = True
@@ -302,7 +301,7 @@ def main(mode):
     while YEAR < AGE:
         log(f'Year {YEAR}')
         display(myWorld, YEAR)
-        update(myWorld)
+        myWorld.update()
         if random.randint(1, 20) == 20:
             seed(myWorld, rpgtools.coretools.roll('1d6'))
         YEAR += 1
