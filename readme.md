@@ -8,9 +8,13 @@ termcolor==1.1.0
 spacy==3.0.6
 ```
 
-In addition, the spaCy `en_core_web_sm` package is required. To install the package, install SpaCy and then run
+In order to use language features the `rpgtools` submodule should be installed. Run
 
-`python -m spacy download en_core_web_sm`
+`git submodule init`
+and
+`git submodule update`
+
+To download the required submodules.
 
 ## Features
 Currently civsim supports the following features:
