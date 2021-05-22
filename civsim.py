@@ -29,9 +29,6 @@ TEMP = [[messy_noise([i / WIDTH, j / HEIGHT], TNOISE) +
 ELEV = [[messy_noise([i / WIDTH, j / HEIGHT], ENOISE)
          for i in range(WIDTH)] for j in range(HEIGHT)]
 
-CURR_CIV = 0
-CIVLIST = []
-CIV_MISSIVES = []
 YEAR = 0
 
 class Planet:
@@ -48,6 +45,7 @@ class Planet:
         self.base_biome = base_biome
         self.world = [[base_biome]*w for _ in range(h)]
         self.civ = [[UNOCCUPIED]*w for _ in range(h)]
+        self.settlements = [[None]*w for _ in range(h)]
         self.w = w
         self.h = h
         self.curr_civ = 0
@@ -80,9 +78,46 @@ class Planet:
         return self.world
 
     def update(self):
+        # Each turn update settlements
+        for y in self.settlements:
+            for x in y:
+                if x:
+                    # Settlements have chance to grow
+                    x.upgrade()
+                    # Settlements give power boost to their owners
+                    if x.history[-1]:
+                        x.history[-1].power += x.level*rpgtools.coretools.roll('1d10')
+                    # Settlements have chance to die
+                    x.update()
         for cand in self.civlist:
             cand.execute()
             cand.update()
+
+    def findciv(self, target):
+        for civ in self.civlist:
+            if civ.symbol == target:
+                return civ
+
+
+class Settlement:
+    def __init__(self, name, world, x, y, level, starting_civ):
+        self.name = name
+        self.homeworld = world
+        self.level = level
+        self.x = x
+        self.y = y
+        self.history = [starting_civ]
+
+    def upgrade(self):
+        if rpgtools.coretools.roll('1d100') < self.level:
+            self.level += 1
+
+    def update(self):
+        # Risk of settlements dying high initially, decreases over time
+        if rpgtools.coretools.roll('1d10') < 3:
+            if rpgtools.coretools.roll('2d100') < (100-self.level):
+                self.homeworld.settlements[self.y][self.x] = None
+
 
 class Civilisation:
     def __init__(self, name, symbol, origin, homeworld, ancestor=None, control=False):
@@ -132,19 +167,28 @@ class Civilisation:
             # Cannot expand into water
             if not (attempt_loc == self.homeworld.base_biome or [ay, ax] in self.territory):
                 # Base 10% success chance, max +50% from technology
-                c = 10 + max(50, 5*self.techlevel)
+                c = 10 + max(70, 5*self.techlevel)
                 if attempt_loc == self.home_biome:  # Bonus chance for expansion if attempting to expand into base biome
                     c += 20
                 if self.homeworld.civ[ay][ax] != UNOCCUPIED:  # Spreading into occupied squares is harder
-                    c -= 5 + findciv(self.homeworld, self.homeworld.civ[ay][ax]).techlevel
+                    c -= 5 + math.ceil(self.homeworld.findciv(self.homeworld.civ[ay][ax]).techlevel/10)
+                if self.homeworld.settlements[ay][ax]:
+                    c -= 5 + math.ceil(self.homeworld.settlements[ay][ax].level/2)
                 if self.homeworld.world[ay][ax] == MOUNTAIN:  # Mountains make it hard to spread
                     c -= 5
                 elif self.homeworld.world[ay][ax] == GRASSLAND:  # grasslands easy to spread
                     c += 5
 
                 if rpgtools.coretools.roll('1d100') < c:
+                    # Overwrite existing territorial claim
+                    if self.homeworld.civ[ay][ax] != UNOCCUPIED:
+                        self.homeworld.findciv(self.homeworld.civ[ay][ax]).territory.remove([ay, ax])
+                    # Settlements change hands
+                    if self.homeworld.settlements[ay][ax]:
+                        self.homeworld.settlements[ay][ax].history.append(self)
                     self.homeworld.civ[ay][ax] = self.symbol
                     self.territory.append([ay, ax])
+
 
     def update(self):
         self.age += 1
@@ -171,6 +215,12 @@ class Civilisation:
             self.homeworld.civlist.remove(self)
         self.homeworld.civletters += self.symbol
         if self.territory:
+            for territory in self.territory:
+                if self.homeworld.settlements[territory[0]][territory[1]]:
+                    self.homeworld.settlements[territory[0]][territory[1]].history.append(None)
+                    # Weaken independent settlements and force collapse check
+                    self.homeworld.settlements[territory[0]][territory[1]].level -= random.randint(1, 10)
+                    self.homeworld.settlements[territory[0]][territory[1]].update()
             scan(self.homeworld.civ, self.symbol, delete=True)
             n = random.randint(1, math.ceil(self.powerbase/10)+1)
             remnants = random.sample(self.territory, min(len(self.territory), n))
@@ -185,6 +235,11 @@ class Civilisation:
         n = random.randint(math.floor(len(self.territory)/1.5), len(self.territory))
         lost_territory = random.sample(self.territory, min(len(self.territory), n))
         for area in lost_territory:
+            if self.homeworld.settlements[area[0]][area[1]]:
+                self.homeworld.settlements[area[0]][area[1]].history.append(None)
+                # Weaken independent settlements and force collapse check
+                self.homeworld.settlements[area[0]][area[1]].level -= random.randint(1, 10)
+                self.homeworld.settlements[area[0]][area[1]].update()
             self.territory.remove(area)
             self.homeworld.civ[area[0]][area[1]] = UNOCCUPIED
         if not decimate and lost_territory:  # Natural disasters do not create new states
@@ -197,6 +252,24 @@ class Civilisation:
                     new_civs.append(new_civ)
             for civ in new_civs:
                 civ.expand()
+
+    def build(self):
+        if not self.territory:
+            return
+        loc = random.choice(self.territory)
+        buildtarget = self.homeworld.settlements[loc[0]][loc[1]]
+        if buildtarget:
+            buildtarget.upgrade()
+        else:
+            name = self.language.brute_force_translate(f'Settlement Established {self.age}')
+            self.homeworld.settlements[loc[0]][loc[1]] = Settlement(
+                name,
+                self.homeworld,
+                loc[1],
+                loc[0],
+                0,
+                self)
+            log(f'{self.name} has established a settlement {name}.')
 
     def execute(self):
         bank = 0
@@ -235,11 +308,16 @@ class Civilisation:
             elif curr_option == TERRITORIAL_STABILIZATION:
                 log(f'{self.name} is stabilising')
                 self.instability *= random.random()
+            elif curr_option == SETTLEMENT_CONSTRUCTION:
+                log(f'{self.name} is building')
+                if self.power >= 5:
+                    self.build()
+                else:
+                    log(f'{self.name} failed to build')
         self.power += bank
 
 
 def seed(world, num_attempts=10, player_control=False):
-    global CURR_CIV
     pc = player_control
     for _ in range(num_attempts):
         tx = random.randint(0, WIDTH-1)
@@ -265,12 +343,6 @@ def make_civ(world, y, x, parent=None, expand=False, player_control=False):
     return nc
 
 
-def findciv(world, target):
-    for civ in world.civlist:
-        if civ.symbol == target:
-            return civ
-
-
 def display(world, year=None):
     if OS == 'Windows':
         os.system('cls')
@@ -280,12 +352,17 @@ def display(world, year=None):
     print(f'Year {year}')
     newstr = ''
     for y in range(world.h):
+        conewstr = ''
         for x in range(world.w):
+            if world.settlements[y][x]:
+                conewstr += termcolor.colored('*', 'red')
+            else:
+                conewstr += termcolor.colored(world.world[y][x], colour(world.world[y][x]))
             if world.civ[y][x]:
                 newstr += termcolor.colored(world.civ[y][x], 'red')
             else:
                 newstr += termcolor.colored(world.world[y][x], colour(world.world[y][x]))
-        newstr += '\n'
+        newstr += '          '+conewstr+'\n'
     print(newstr)
 
 
