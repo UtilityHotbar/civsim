@@ -2,6 +2,7 @@
 
 import os
 import platform
+from copy import deepcopy
 from math import ceil, floor
 from random import choice, randint, random, sample
 from time import sleep
@@ -37,10 +38,8 @@ YEAR = 0
 class Planet:
     def __init__(self, name, w, h, temp_mod=0.1, elev_mod=0, temp_noise=None, elev_noise=None, base_biome=OCEAN):
         self.name = name
-        if not temp_noise:
-            temp_noise = TNOISE
-        if not elev_noise:
-            elev_noise = ENOISE
+        temp_noise = temp_noise or TNOISE
+        elev_noise = elev_noise or ENOISE
         self.temp = [[messy_noise([i / w, j / h], temp_noise) +
                  temp_mod for i in range(w)] for j in range(h)]
         self.elev = [[messy_noise([i / w, j / h], elev_noise) +
@@ -85,12 +84,14 @@ class Planet:
             cand.update()
 
 class Civilisation:
-    def __init__(self, name, symbol, origin, ancestor=None, control=False):
+    def __init__(self, name, symbol, origin, homeworld, ancestor=None, control=False):
         self.language = make_language(COMMONS_WORLD_PATH, Table(LANG_STRUCT_PATH))
         self.name = self.language.brute_force_translate(name)
         self.symbol = symbol
         self.territory = [origin]
         self.homeworld = homeworld
+        self.family_tree = [self.name] if not ancestor else deepcopy(ancestor.family_tree)
+        self.family_tree.extend([self.name])
         self.home_biome = self.homeworld.world[origin[0]][origin[1]]
         self.controlled_by_player = control
         # National stats
@@ -162,6 +163,10 @@ class Civilisation:
 
     def dissolve(self):
         log(f'{self.name} dissolved. It lasted {self.age} years and achieved a tech level of {self.techlevel}')
+        global YEAR
+        if len(self.family_tree) > 1:
+            log(f'Its civilisation roots comprehends {len(self.family_tree) - 1} ancestors')
+            log(f'Family Tree: {self.family_tree}')
         self.dead = True
         if self in self.homeworld.civlist:
             self.homeworld.civlist.remove(self)
@@ -186,9 +191,8 @@ class Civilisation:
             n = randint(1, ceil(self.base_power / 10) + 1)
             successor_states = sample(lost_territory, min(len(lost_territory), n))
             new_civs = []
-            for successor_state in successor_states:
-                new_civ = make_civ(
-                    successor_state[0], successor_state[1], parent=self)
+            for state in successor_states:
+                new_civ = make_civ(self.homeworld, state[0], state[1], parent=self)
                 if new_civ:
                     new_civs.append(new_civ)
             for civ in new_civs:
@@ -252,9 +256,8 @@ def make_civ(world, y, x, parent=None, expand=False, player_control=False):
     if world.curr_civ > len(CIVLETTERS)-1:
         return
     world.civ[y][x] = CIVLETTERS[world.curr_civ]
-    nc = Civilisation('Civ {}+{}'.format(CIVLETTERS[world.curr_civ], world.curr_civ),
-                      CIVLETTERS[world.curr_civ], [y, x],
-                      world, ancestor=parent, control=player_control)
+    name = 'Civ {}+{}'.format(CIVLETTERS[world.curr_civ], world.curr_civ)
+    nc = Civilisation(name, CIVLETTERS[world.curr_civ], [y, x], world, ancestor=parent, control=player_control)
     world.civlist.append(nc)
     world.curr_civ += 1
     if expand:
