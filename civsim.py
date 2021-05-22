@@ -87,7 +87,7 @@ class Planet:
                     # Settlements give power boost to their owners
                     if x.history[-1]:
                         x.history[-1].power += x.level*rpgtools.coretools.roll('1d10')
-                    # Settlements have chance to die
+                    # Settlements have a chance to collapse
                     x.update()
         for cand in self.civlist:
             cand.execute()
@@ -109,8 +109,7 @@ class Settlement:
         self.history = [starting_civ]
 
     def upgrade(self):
-        if rpgtools.coretools.roll('1d100') < self.level:
-            self.level += 1
+        self.level += 1
 
     def update(self):
         # Risk of settlements dying high initially, decreases over time
@@ -261,15 +260,24 @@ class Civilisation:
         if buildtarget:
             buildtarget.upgrade()
         else:
-            name = self.language.brute_force_translate(f'Settlement Established {self.age}')
-            self.homeworld.settlements[loc[0]][loc[1]] = Settlement(
-                name,
-                self.homeworld,
-                loc[1],
-                loc[0],
-                0,
-                self)
-            log(f'{self.name} has established a settlement {name}.')
+            c = 10  # Base 10% chance of building success
+            buildlocation = self.homeworld.world[loc[0]][loc[1]]
+            if buildlocation == 'm':  # Hard to build on mountains
+                c -= 5
+            elif buildlocation == 'g':  # Easy to build on grassland
+                c += 10
+            if rpgtools.coretools.roll('1d100') < c:
+                name = self.language.brute_force_translate(f'Settlement Established {self.age}')
+                self.homeworld.settlements[loc[0]][loc[1]] = Settlement(
+                    name,
+                    self.homeworld,
+                    loc[1],
+                    loc[0],
+                    0,
+                    self)
+                log(f'{self.name} has established a settlement {name}.')
+            else:
+                log(f'{self.name} attempted to start a settlement, but it failed.')
 
     def execute(self):
         bank = 0
@@ -352,17 +360,22 @@ def display(world, year=None):
     print(f'Year {year}')
     newstr = ''
     for y in range(world.h):
-        conewstr = ''
         for x in range(world.w):
+            onstr = 'on_grey'
             if world.settlements[y][x]:
-                conewstr += termcolor.colored('*', 'red')
-            else:
-                conewstr += termcolor.colored(world.world[y][x], colour(world.world[y][x]))
+                if world.settlements[y][x].level > 50:
+                    onstr = 'on_white'
+                elif world.settlements[y][x].level > 30:
+                    onstr = 'on_yellow'
+                elif world.settlements[y][x].level > 10:
+                    onstr = 'on_cyan'
+                else:
+                    onstr = 'on_blue'
             if world.civ[y][x]:
-                newstr += termcolor.colored(world.civ[y][x], 'red')
+                newstr += termcolor.colored(world.civ[y][x], 'red', onstr)
             else:
-                newstr += termcolor.colored(world.world[y][x], colour(world.world[y][x]))
-        newstr += '          '+conewstr+'\n'
+                newstr += termcolor.colored(world.world[y][x], colour(world.world[y][x]), onstr)
+        newstr += '\n'
     print(newstr)
 
 
