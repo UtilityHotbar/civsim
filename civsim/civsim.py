@@ -2,7 +2,6 @@
 
 import os
 import platform
-from copy import deepcopy
 from math import ceil, floor
 from random import choice, randint, random, sample
 from time import sleep
@@ -90,8 +89,6 @@ class Civilisation:
         self.symbol = symbol
         self.territory = [origin]
         self.homeworld = homeworld
-        self.family_tree = [self.name] if not ancestor else deepcopy(ancestor.family_tree)
-        self.family_tree.extend([self.name])
         self.home_biome = self.homeworld.world[origin[0]][origin[1]]
         self.controlled_by_player = control
         # National stats
@@ -163,10 +160,6 @@ class Civilisation:
 
     def dissolve(self):
         log(f'{self.name} dissolved. It lasted {self.age} years and achieved a tech level of {self.techlevel}')
-        global YEAR
-        if len(self.family_tree) > 1:
-            log(f'Its civilisation roots comprehends {len(self.family_tree) - 1} ancestors')
-            log(f'Family Tree: {self.family_tree}')
         self.dead = True
         if self in self.homeworld.civlist:
             self.homeworld.civlist.remove(self)
