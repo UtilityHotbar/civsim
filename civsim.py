@@ -5,6 +5,7 @@ import os
 import platform
 import random
 import time
+import cProfile
 
 import termcolor
 from perlin_noise import PerlinNoise
@@ -46,6 +47,7 @@ class Planet:
         self.world = [[base_biome]*w for _ in range(h)]
         self.civ = [[UNOCCUPIED]*w for _ in range(h)]
         self.settlements = [[None]*w for _ in range(h)]
+        self.ruins = [[[] for _ in range(w)] for _ in range(h)]
         self.w = w
         self.h = h
         self.curr_civ = 0
@@ -116,6 +118,8 @@ class Settlement:
         if rpgtools.coretools.roll('1d10') < 3:
             if rpgtools.coretools.roll('2d100') < (100-self.level):
                 self.homeworld.settlements[self.y][self.x] = None
+                if self.level > 5:
+                    self.homeworld.ruins[self.y][self.x].append(self)
 
 
 class Civilisation:
@@ -402,4 +406,4 @@ if __name__ == '__main__':
     print(MENU_LOGO)
     print(f'Civsim {VERSION} by UtilityHotbar')
     mode = rpgtools.coretools.generate_menu(['Realm Mode', 'Simulation Mode'])
-    main(mode)
+    cProfile.run("main(mode)")
