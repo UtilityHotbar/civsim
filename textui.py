@@ -1,5 +1,4 @@
 import blessed
-import textwrap
 
 
 class Frame:
@@ -28,7 +27,7 @@ class Frame:
         for line in self.content:
             long_arg = line.split('\n')
             for subarg in long_arg:
-                displayContent += textwrap.wrap(subarg, self.width - 2)
+                displayContent += term.wrap(subarg, self.width - 2)
         if bottom:
             displayContent = list(reversed(list(reversed(displayContent))[:min(self.height-2, len(displayContent))]))
         if not dynamic_height and len(displayContent) < self.height - 2:
