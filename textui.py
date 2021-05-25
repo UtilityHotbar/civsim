@@ -33,7 +33,7 @@ class Frame:
             displayContent = list(reversed(list(reversed(displayContent))[:min(self.height-2, len(displayContent))]))
         if not dynamic_height and len(displayContent) < self.height - 2:
             displayContent += ['']*((self.height-2)-len(displayContent))
-
+        self.cy = 0
         curr = 0
         with self.term.location(self.start_x, self.start_y):
             print(self.frame*self.width)
@@ -63,13 +63,12 @@ class Frame:
         return len(self.content)
 
 
-
 if __name__ == '__main__':
     term = blessed.Terminal()
     with term.fullscreen():
         while True:
             myFrame = Frame(term, 1, 1, 20, 10, frame='~')
-            myFrame.content.append('CHRIS\' CHARACTER SHEET\nName: Albert\nClass: Wizard\nStr: 10\nDex: 05\nCha: 19')
+            myFrame.content.append('MIKE\'S CHARACTER SHEET\nName: Albert\nClass: Wizard\nStr: 10\nDex: 05\nCha: 19')
             myFrame.display(dynamic_height=False, centered=True)
             print(term.move_y(term.height-1), 'test')
             i = input(' testinput> ')
