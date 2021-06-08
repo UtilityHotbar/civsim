@@ -36,7 +36,7 @@ class Frame:
         curr = 0
         with self.term.location(self.start_x, self.start_y):
             print(self.frame*self.width)
-        for i in range(self.height-2):
+        for _ in range(self.height-2):
             curr_content = displayContent[curr]
             with self.term.location(self.start_x, self.start_y + self.cy + 1):
                 if centered:

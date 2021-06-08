@@ -1,4 +1,6 @@
 from constants import BEACH, DESERT, FOREST, GRASSLAND, HEIGHT, JUNGLE, MOUNTAIN, OCEAN, SAVE_LOCATION, SNOW, WIDTH, UNOCCUPIED
+import os
+import platform
 
 def scan(world, target, delete=False):
     reslist = []
@@ -11,28 +13,57 @@ def scan(world, target, delete=False):
                     world[y][x] = UNOCCUPIED
     return reslist
 
+
 def messy_noise(val, noise_set):
     return noise_set[0](val)+0.5*noise_set[1](val)+0.25*noise_set[2](val)
 
+
 def clamp(val, nmin=0, nmax=1):
     return max(nmin, min(val, nmax))
+
 
 def log(*args,end='\n'):
     with open(SAVE_LOCATION, 'a') as w:
         w.write(' '.join([str(arg) for arg in args])+end)
 
-def colour(char):
+
+def colour(char, term):
     if char == GRASSLAND or char == FOREST:
-        return 'green'
+        return term.green
     elif char == OCEAN:
-        return 'blue'
+        return term.blue
     elif char == MOUNTAIN:
-        return 'magenta'
+        return term.magenta
     elif char == JUNGLE:
-        return 'cyan'
+        return term.cyan
     elif char == SNOW:
-        return 'white'
+        return term.white
     elif char == DESERT or char == BEACH:
-        return 'yellow'
+        return term.yellow
     else:
-        return 'white'
+        return term.white
+
+
+def input_number(prompt='', default_answer=None, use_float=False):
+    while True:
+        n = input(prompt)
+        try:
+            if (n == '') and (default_answer != None):
+                return default_answer
+            if use_float:
+                n = float(n)
+            else:
+                n = int(n)
+        except ValueError:
+            if (default_answer != None):
+                print('Error - Please enter a number or an empty input for default.')
+            else:
+                print('Error - Please enter a number.')
+            continue
+        return n
+
+def screen_clear():
+    if platform.system() == 'Windows':
+        os.system('cls')
+    else:
+        os.system('clear')

@@ -1,0 +1,46 @@
+// GM Name: John
+// Starting Mood: 0
+
+Table:Intro
+Ok, got your dice ready? Good.
+Pizza's coming in 50 minutes.
+Pass me the rulebook? 1 sec... got it.
+Ok, got your dice? Good. You descend into the Caverns of Doom.
+
+Table:Encounters
+Encounter
+Nearby
+Trap
+Food
+Light
+None
+
+Table:Floor1
+3: Mole Rat: AC 9; HD 1; #AT 1 Bite; Dmg 1d6 Piercing;
+2: Gnoll: AC 8; HD 1; #AT 1 Shortsword; Dmg 1d4 Slashing;
+Giant Beetle: AC 10; HD 2; #AT 1 Bite; Dmg 1d6 Poison;
+
+Table:RoomText
+You're standing in a dark, dank dungeon room...
+The dungeon stretches out in front of you...
+It's very, very dark. It almost feels like the shadows are clawing at you...
+You don't feel safe at all...
+In the distance you can hear the scuttling of strange creatures...
+
+Table:WorldEdgeText
+Sorry, you cannot advance.
+You can't go that way.
+That's the edge of the world, sorry.
+Look, we're out of map, ok?
+
+Table:SessionEndText
+That looks like a good place to stop for today.
+Phew!
+Alright, gg everyone.
+
+Table:OverworldEvents
+Supplies
+Encounter
+Attack
+Treasure
+None

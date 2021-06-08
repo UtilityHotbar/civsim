@@ -1,22 +1,15 @@
 # Civsim v0.2 by UtilityHotbar
 
 import math
-import os
-import platform
 import random
 import time
-import cProfile
-
-import termcolor
+import blessed
 from perlin_noise import PerlinNoise
-
 import rpgtools.lang_gen
 import rpgtools.coretools
 import rpgtools.table_process
 from constants import *
 from utils import *
-
-OS = platform.system()
 
 TNOISE = [PerlinNoise(octaves=2, seed=random.randint(1, 10000)),
           PerlinNoise(octaves=4, seed=random.randint(1, 10000)),
@@ -109,6 +102,7 @@ class Settlement:
         self.x = x
         self.y = y
         self.history = [starting_civ]
+        self.architecture_level = starting_civ.techlevel
 
     def upgrade(self):
         self.level += 1
@@ -153,6 +147,9 @@ class Civilisation:
         # Diplomatic relationships
         self.relationships = {}
         self.age = 0
+        # Architecture
+        self.architecture = [random.choice(SHAPES)]
+        self.current_milestone = 0
 
     def expand(self):
         if self.dead or not self.territory:
@@ -168,7 +165,7 @@ class Civilisation:
             attempt_loc = self.homeworld.world[ay][ax]
 
             # Cannot expand into water
-            if not (attempt_loc == self.homeworld.base_biome or [ay, ax] in self.territory):
+            if not (attempt_loc == '~' or [ay, ax] in self.territory):
                 # Base 10% success chance, max +50% from technology
                 c = 10 + max(70, 5*self.techlevel)
                 if attempt_loc == self.home_biome:  # Bonus chance for expansion if attempting to expand into base biome
@@ -312,6 +309,10 @@ class Civilisation:
                 if self.power > 20:
                     self.power -= 20
                     self.techlevel += rpgtools.coretools.roll('1d10')/10
+                    # Developing more advanced architecture
+                    if self.techlevel > MILESTONES[self.current_milestone] and self.current_milestone < len(MILESTONES)-1:
+                        self.current_milestone += 1
+                        self.architecture += random.choice(SHAPES)
                 else:
                     log(f'{self.name} failed to develop')
             elif curr_option == POPULATION_GROWTH:
@@ -355,35 +356,34 @@ def make_civ(world, y, x, parent=None, expand=False, player_control=False):
     return nc
 
 
-def display(world, year=None):
-    if OS == 'Windows':
-        os.system('cls')
-    else:
-        os.system('clear')
-
-    print(f'Year {year}')
+def display(world, term, year=None, highlight=None):
+    screen_clear()
+    if year:
+        print(f'Year {year}')
     newstr = ''
     for y in range(world.h):
         for x in range(world.w):
-            onstr = 'on_grey'
+            onstr = term.on_grey
             if world.settlements[y][x]:
                 if world.settlements[y][x].level > 50:
-                    onstr = 'on_white'
+                    onstr = term.on_green
                 elif world.settlements[y][x].level > 30:
-                    onstr = 'on_yellow'
+                    onstr = term.on_yellow
                 elif world.settlements[y][x].level > 10:
-                    onstr = 'on_cyan'
+                    onstr = term.on_cyan
                 else:
-                    onstr = 'on_blue'
+                    onstr = term.on_blue
+            if highlight == [x, y]:
+                onstr = term.on_white
             if world.civ[y][x]:
-                newstr += termcolor.colored(world.civ[y][x], 'red', onstr)
+                newstr += f'{onstr}{world.civ[y][x]}{term.normal}'
             else:
-                newstr += termcolor.colored(world.world[y][x], colour(world.world[y][x]), onstr)
+                newstr += f'{colour(world.world[y][x], term)}{world.world[y][x]}{term.normal}'
         newstr += '\n'
     print(newstr)
 
 
-def main(mode):
+def main(mode, term):
     if mode == 0:
         pc = True
     else:
@@ -394,7 +394,7 @@ def main(mode):
     seed(myWorld, player_control=pc)
     while YEAR < AGE:
         log(f'Year {YEAR}')
-        display(myWorld, YEAR)
+        display(myWorld, term, year=YEAR)
         myWorld.update()
         if random.randint(1, 20) == 20:
             seed(myWorld, rpgtools.coretools.roll('1d6'))
@@ -403,7 +403,8 @@ def main(mode):
 
 
 if __name__ == '__main__':
+    term = blessed.Terminal()
     print(MENU_LOGO)
     print(f'Civsim {VERSION} by UtilityHotbar')
     mode = rpgtools.coretools.generate_menu(['Realm Mode', 'Simulation Mode'])
-    cProfile.run("main(mode)")
+    main(mode, term)
